@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- A `prompts/` library of standalone prompts, starting with one that finds implicit state machines.
+
 ## [0.5.0] - 2026-11-07
 
 ### Added
