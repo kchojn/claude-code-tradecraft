@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this repo is
 
-Prompt files for Claude Code, packaged as the `tradecraft` plugin (its own marketplace is `claude-code-tradecraft`). There is nothing to build, lint, or unit test. `skills/<name>/SKILL.md` are the slash commands, `agents/*.md` are subagent definitions, and `docs/` holds the sourced rules they are written against plus the flowcharts the README embeds.
+Prompt files for Claude Code, packaged as the `tradecraft` plugin (its own marketplace is `claude-code-tradecraft`). There is nothing to build, lint, or unit test. `skills/<name>/SKILL.md` are the slash commands, `agents/*.md` are subagent definitions, `docs/` holds the sourced rules they are written against plus the flowcharts the README embeds, and `prompts/` holds standalone prompts to paste into a session. The plugin does not load `prompts/`, and its files are exempt from the sourcing rule; `prompts/README.md` indexes them.
 
 ## Working with the files
 

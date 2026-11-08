@@ -97,6 +97,7 @@ The watcher starts its reviews this way.
 | `docs/lead-review.md` | Each practice mapped to the line in the lead skill that implements it. |
 | `docs/*-flow.html`, `docs/*-flow.svg` | The three flowcharts above. The HTML is the source. |
 | `docs/social-preview.html`, `docs/social-preview.png` | The GitHub social preview card and its 1280x640 export. |
+| `prompts/` | Prompts worth keeping, to paste into a session. Not loaded by the plugin. |
 | `.claude-plugin/` | The plugin and marketplace manifests. |
 | `CHANGELOG.md`, `CONTRIBUTING.md`, `LICENSE` | Release notes, how to contribute, and the license. |
 
