@@ -39,7 +39,7 @@ Prerequisites:
 | `tradecraft:implementer` | sonnet | medium | writes | Writes code from a spec and runs the existing checks. |
 | `tradecraft:reviewer` | sonnet | high | read-only, no CLAUDE.md | Finds or verifies defects with `file:line` evidence. |
 | `tradecraft:deep-reasoner` | opus | high | no edits | Designs and debugs by reading code. |
-| `tradecraft:oracle` | fable | high | read-only | One escalation call when a phase has failed twice. |
+| `tradecraft:oracle` | fable | high | read-only | One decision call: a major design, a question Opus could not settle, or a phase that failed twice. |
 
 Commands never pass `model`; the agent's frontmatter decides. The one exception is `model: opus` to retry a failed implementer phase.
 
@@ -47,7 +47,7 @@ Commands never pass `model`; the agent's frontmatter decides. The one exception 
 
 ![The /tradecraft:lead orchestration flow](docs/lead-flow.svg)
 
-Trivial work stays with the lead. Work of size S goes to one worker with a minimal brief and no phases. Everything else runs as bounded phases: define the phase, delegate it to one worker, and check the report against "done when". A failed phase retries on the same worker or a stronger one, and a second failure goes once to `tradecraft:oracle`. A disputed verdict can go to the Codex companion script when the OpenAI Codex plugin is installed. At most ten workers run in parallel. A worker report opens with `DONE`, `DONE_WITH_CONCERNS`, `NEEDS_CONTEXT`, or `BLOCKED`, and the final synthesis ends with Blocked on me, Changed, and Found.
+Trivial work stays with the lead. Work of size S goes to one worker with a minimal brief and no phases. Everything else runs as bounded phases: define the phase, delegate it to one worker, and check the report against "done when". A failed phase retries on the same worker or a stronger one, and a second failure goes once to `tradecraft:oracle`. So do the plan for a major architecture, migration, or performance change, and a question `tradecraft:deep-reasoner` could not settle. A disputed verdict can go to the Codex companion script when the OpenAI Codex plugin is installed. At most ten workers run in parallel. A worker report opens with `DONE`, `DONE_WITH_CONCERNS`, `NEEDS_CONTEXT`, or `BLOCKED`, and the final synthesis ends with Blocked on me, Changed, and Found.
 
 ## How /tradecraft:pr-review runs
 

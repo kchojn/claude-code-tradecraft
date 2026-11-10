@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- `/tradecraft:lead` sends two more questions to `tradecraft:oracle` without waiting for two failures: the plan for a major architecture, migration, or performance change, and a question `tradecraft:deep-reasoner` could not settle.
+- The orchestration rules cite Anthropic's guidance for Fable 5.2, Opus 5.5, Sonnet 5.5, and Haiku 5.5: the escalation order, no effort above `high`, fast mode off for delegated runs, and model and effort chosen when a task starts.
+
 ## [0.6.0] - 2026-11-08
 
 ### Added
