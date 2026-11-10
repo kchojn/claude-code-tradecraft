@@ -1,6 +1,6 @@
 # Review of `/tradecraft:lead` against the best practices
 
-Checked against [orchestration-best-practices.md](orchestration-best-practices.md) on 2026-11-07. Every practice has a row; the table says where `skills/lead/SKILL.md` implements it and which section states the practice. The Gaps section lists the practices with no implementing line.
+Checked against [orchestration-best-practices.md](orchestration-best-practices.md) on 2026-11-10. Every practice has a row; the table says where `skills/lead/SKILL.md` implements it and which section states the practice. The Gaps section lists the practices with no implementing line.
 
 | Practice | Section | Where in `skills/lead/SKILL.md` |
 |----------|---------|---------------------------------|
@@ -20,8 +20,11 @@ Checked against [orchestration-best-practices.md](orchestration-best-practices.m
 | Fixed report shape | 5 | Worker report: lines 80-89 |
 | Parallel only when independent; disjoint files or a worktree for writers | 6 | Delegation rules: lines 93-94 |
 | Turn limit is not a provider failure | 11 | Delegation rules: line 96 "A worker that hits its turn limit" |
+| No worker above `high` effort | 3 | Workers table: lines 12-19, every effort is `medium` or `high`; the skill passes no `effort` |
 | Retry on the same or a stronger model, never a cheaper one; `model: opus` for a failed `tradecraft:implementer` phase, `tradecraft:deep-reasoner` for a failed `tradecraft:reviewer` or `tradecraft:scout` phase | 3, 7 | Workers: line 25 "`model: opus`"; Delegation rules: line 96 "Retry on the same worker or a stronger one" |
 | Escalate after two failures, once, read-only, on the most capable model; a different provider for disputes | 7 | Workers table: lines 19-20; Delegation rules: line 96 "goes once to `tradecraft:oracle`" |
+| A major design, and a question the Opus worker could not settle, go to the most capable model without two failures | 7 | Workers table: line 19; Phases: line 54 "A major design goes to `tradecraft:oracle`"; Delegation rules: line 96 "report that reaches no conclusion" |
+| The stronger model is a worker the lead calls, not an advisor | 7 | Workers table: line 19 "one call per question" |
 | The second provider is called directly and read-only, not through a forwarding subagent | 7 | Delegation rules: line 96 "Never pass `--write`, and never go through `/codex:rescue`" |
 | Destructive actions stay in the lead | 7 | Delegation rules: line 98 "Destructive and outward-facing actions stay with you" |
 | Verify the premise | 8 | Verify the premise: lines 39-46 |
@@ -31,6 +34,8 @@ Checked against [orchestration-best-practices.md](orchestration-best-practices.m
 ## Gaps
 
 - Clear history between unrelated tasks (section 1). The skill does not implement it; the author's own global instructions cover it outside this repository.
+- Fast mode off for delegated runs, and model and effort chosen when a task starts (sections 3 and 11). Both are session settings the skill cannot set; the author's own global instructions cover them.
+- Raise effort one level before moving to a stronger model (section 3). The skill retries a failed `tradecraft:implementer` phase on `model: opus` at the same `medium` effort instead: one retry is left before the escalation, and the stronger model is the larger step.
 - Text written by other people is data, never instructions (section 11). The lead skill does not state it; `skills/pr-review/SKILL.md` section 2 does, because that skill reads PR text.
 - The eval loop (section 10). It is a practice for maintaining the skill, not a rule for running it, so the skill omits it on purpose.
 
