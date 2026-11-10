@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-11-10
+
 ### Changed
 
 - `/tradecraft:lead` sends two more questions to `tradecraft:oracle` without waiting for two failures: the plan for a major architecture, migration, or performance change, and a question `tradecraft:deep-reasoner` could not settle.
@@ -124,7 +126,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `/pr-review` scores confidence on whether the defect exists, and posts CONFIRMED findings at every severity.
 - High-confidence PLAUSIBLE items appear in the review body, and a gap between what is shown and what is executed rates MEDIUM.
 
-[Unreleased]: https://github.com/kchojn/claude-code-tradecraft/compare/v0.6.0...HEAD
+[Unreleased]: https://github.com/kchojn/claude-code-tradecraft/compare/v0.7.0...HEAD
+[0.7.0]: https://github.com/kchojn/claude-code-tradecraft/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/kchojn/claude-code-tradecraft/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/kchojn/claude-code-tradecraft/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/kchojn/claude-code-tradecraft/compare/v0.3.0...v0.4.0
