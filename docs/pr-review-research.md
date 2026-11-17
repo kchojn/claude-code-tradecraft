@@ -207,6 +207,20 @@ The context pack named rule files by path and workers read them in the head work
 
 Adopted in section 2: rule files are listed and read at the base SHA, with `git show <base sha>:<path>`. A rule file the PR adds or changes is reviewed as part of the diff and binds the next PR, not this one.
 
+## 19. Approving a LOW-only PR
+
+A LOW-only round posted COMMENT, so a PR with nothing but minor findings waited for a person when the review had found nothing worth blocking on.
+
+- Google: approve once a change "definitely improves the overall code health", even if it "isn't perfect"; a comment marked "Nit:" is optional and does not block. [Google eng-practices, standard]
+- Claude Code's managed Code Review "never approves or blocks the pull request, so the decision to merge stays with your team"; its check run concludes neutral. This command approves anyway, as it already did with no findings, because the owner chose that on 2026-11-17. [Claude Code docs, code review] [opinion]
+- Copilot code review submits only comment reviews, so its feedback never counts toward a required approval. [Copilot code review docs]
+- GitHub branch protection can dismiss an approval when a push or a merge-base change alters the diff; that is the guard against commits added after an approval, and it is a repository setting, not something this command controls. [GitHub docs, protected branches; OpenSSF SCM best practices]
+- Practitioners who let a bot approve gate it on what the change touches, not only on the bot's findings, and approve after CI passes; a rule that counted only resolved bot comments could not tell test fixtures from billing logic. [Rewind, AI approval; Augment, approval guardrails] Bot approval invites automation bias: a polished PR draws a quick approval where it most needs a close look. [Codacy, automation bias]
+
+Adopted in section 14: CONFIRMED LOW only approves, with the LOW comments on the same review; the high-risk tier from section 3 still gets COMMENT. Every APPROVE passes a gate read at the race check: no failed check, no merge conflict, no `[Optional]` finding at MEDIUM or above. A failed gate posts COMMENT with a one-line reason.
+
+Not adopted: withholding approval while a check is pending, because a review rarely outlasts CI, the next review of the same head stops at once, and required checks still block the merge; withholding a zero-finding APPROVE on the high-risk tier, which this command has always given.
+
 ## Sources
 
 - Claude Code built-in `/code-review` recipe, extracted from the `claude` 2.1.299 binary (strings `Angle A`, `PLAUSIBLE by default`, `Sweep for gaps`)
@@ -247,3 +261,6 @@ Adopted in section 2: rule files are listed and read at the base SHA, with `git 
 - [Greptile changelog](https://www.greptile.com/changelog), [memory and learning](https://www.greptile.com/docs/how-greptile-works/memory-and-learning)
 - [Copilot code review docs](https://docs.github.com/en/copilot/using-github-copilot/code-review/using-copilot-code-review)
 - [How to make an agentic loop converge in AI code review](https://dev.to/uss/how-to-make-an-agentic-loop-converge-in-ai-code-review-4i1c), [Agentic code review loop, Robin Wieruch](https://www.robinwieruch.de/agentic-code-review-loop/)
+- [Claude Code docs, code review](https://code.claude.com/docs/en/code-review)
+- [GitHub docs, about protected branches](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/about-protected-branches), [OpenSSF SCM best practices, dismiss stale reviews](https://best.openssf.org/SCM-BestPractices/github/repository/dismisses_stale_reviews.html)
+- [Letting AI approve pull requests safely, Rewind](https://rewind.com/blog/ai-approve-pull-requests-safely/), [AI agents PR approval guardrails, Augment](https://www.augmentcode.com/guides/ai-agents-pull-request-approval-guardrails), [Automation bias in AI code review, Codacy](https://blog.codacy.com/automation-bias-in-ai-generated-code-review-why-clean-code-still-ships-broken)

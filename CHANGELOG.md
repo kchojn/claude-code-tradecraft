@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- `/tradecraft:pr-review` approves a PR whose only confirmed findings are LOW, posting them as inline comments, except on the high-risk tier.
+- `/tradecraft:pr-review` withholds any APPROVE, posting COMMENT with the reason, when a check has failed, the PR has merge conflicts, or an `[Optional]` finding is MEDIUM or above.
+
 ## [0.8.0] - 2026-11-17
 
 ### Changed

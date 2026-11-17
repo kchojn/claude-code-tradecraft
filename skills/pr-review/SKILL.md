@@ -202,7 +202,7 @@ Every inline comment targets the **current head SHA**, with line numbers from th
 
 ## 11. Race check
 
-Immediately before publishing: refresh PR state and head SHA, confirm the PR is open, and compare with the reviewed head. If the head moved, do not publish stale comments. Re-check only the findings whose own file changed or whose evidence cites a file that changed, and refresh their line anchors and permalinks; restart the whole review only when the new diff is materially different.
+Immediately before publishing: refresh PR state and head SHA, confirm the PR is open, compare with the reviewed head, and read `gh pr checks` and `gh pr view --json mergeable` for the approval gate in section 14. If the head moved, do not publish stale comments. Re-check only the findings whose own file changed or whose evidence cites a file that changed, and refresh their line anchors and permalinks; restart the whole review only when the new diff is materially different.
 
 ## 12. Modes
 
@@ -256,14 +256,20 @@ Rules, from the Codex rubric, the Claude Code review plugin, and GitHub's format
 
 ## 14. Submission policy
 
-The event follows the CONFIRMED findings only; `[Optional]` comments never change it. In a re-review, this account's earlier findings count as CONFIRMED now unless the verifier marked them `FIXED`; a finding whose lines no new commit touched is still `OPEN` without re-verification, so a push that ignores a HIGH never earns an APPROVE.
+The event follows the CONFIRMED findings; `[Optional]` comments change it only through the approval gate below. In a re-review, this account's earlier findings count as CONFIRMED now unless the verifier marked them `FIXED`; a finding whose lines no new commit touched is still `OPEN` without re-verification, so a push that ignores a HIGH never earns an APPROVE.
 
-- No CONFIRMED findings: APPROVE. A LOW-only round from the third review onward posts COMMENT as section 2 says.
-- LOW only: COMMENT.
+- No CONFIRMED findings: APPROVE.
+- LOW only: APPROVE, with the LOW findings as inline comments on the same review. On the high-risk tier, and in a LOW-only round from the third review onward, COMMENT instead; the latter as section 2 says.
 - MEDIUM: COMMENT by default; REQUEST_CHANGES only when the concrete impact should block merge and the evidence rules out speculation.
 - HIGH or BLOCKER: REQUEST_CHANGES.
 
-A merged or closed PR gets no review. The review body is empty unless there is a CONFIRMED finding, a `Pre-existing` item, or the cycle limit from section 2 applies. Then it is the cycle-limit sentence when it applies, one plain sentence, and one `Pre-existing` line per item, nothing more:
+**Approval gate**: an APPROVE needs all of these, read at the race check in section 11. When one fails, post COMMENT instead, with the same inline comments, and open the body with `Approval withheld: <reason>.`
+
+- No check from `gh pr checks` has failed. A pending check does not withhold: required checks still gate the merge after an approval.
+- `gh pr view --json mergeable` is not `CONFLICTING`: resolving the conflict changes code no one reviewed.
+- No `[Optional]` comment is MEDIUM or above: an unverified defect of that size is not a clean result.
+
+A merged or closed PR gets no review. The review body is empty unless there is a CONFIRMED finding, a `Pre-existing` item, a withheld approval, or the cycle limit from section 2 applies. Then it is the withheld-approval line when it applies, the cycle-limit sentence when it applies, one plain sentence, and one `Pre-existing` line per item, nothing more:
 
 ```
 2 findings, highest HIGH. Mergeable after the HIGH is fixed.
