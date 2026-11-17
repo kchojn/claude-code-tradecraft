@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- `/tradecraft:pr-review` reads `REVIEW.md`, `CLAUDE.md`, `AGENTS.md`, and `CONTRIBUTING.md` at the base commit, so a PR cannot change the rules it is reviewed against.
+
 ## [0.7.0] - 2026-11-10
 
 ### Changed

@@ -197,6 +197,15 @@ These values in the skills have no cited source and no recorded run. Dates come 
 - `Up to 6 candidates per angle, up to 8 on high-risk`, and the gap sweep's `up to 8` (`skills/pr-review/SKILL.md` section 5). Set 2026-10-14. No measured source; change it when a run shows a better value.
 - Watcher `-P 3` (three reviews at once). Set 2026-11-03. The skill gives a reason, enough to drain a morning's requests without hitting rate limits, but no measurement. No measured source; change it when a run shows a better value.
 - Watcher `60m` timeout per review and `--max-budget-usd 10` per review (`skills/pr-review-watch/SKILL.md`). Both set 2026-11-03. No measured source; change it when a run shows a better value.
+- Second finder on the high-risk tier (`skills/pr-review/SKILL.md` section 4). Set after Bugbot's reordering trick (section 1); the verification post says adding a second reviewer is "often a worse approach than tuning the primary". No run here compares one finder with two. No measured source; change it when a run shows a better value. [How the Claude Code team thinks about verification]
+
+## 18. Rule files come from the base
+
+The context pack named rule files by path and workers read them in the head worktree, so a PR could change `REVIEW.md` or `CLAUDE.md` and be judged by its own edit.
+
+- "If a change can modify the check that judges it, the check is broken." Anthropic's Code Review reads `REVIEW.md` "from the base or default branch, never from the pull request's changes". [How the Claude Code team thinks about verification]
+
+Adopted in section 2: rule files are listed and read at the base SHA, with `git show <base sha>:<path>`. A rule file the PR adds or changes is reviewed as part of the diff and binds the next PR, not this one.
 
 ## Sources
 
@@ -232,6 +241,7 @@ These values in the skills have no cited source and no recorded run. Dates come 
 - [Conventional Comments](https://conventionalcomments.org)
 - [Claude Code docs: headless](https://code.claude.com/docs/en/headless), [CLI reference](https://code.claude.com/docs/en/cli-reference), [permission modes](https://code.claude.com/docs/en/permission-modes), [scheduled tasks](https://code.claude.com/docs/en/scheduled-tasks), [skills](https://code.claude.com/docs/en/skills)
 - [Solving code review at Anthropic](https://claude.dev/blog/solving-code-review-at-anthropic/)
+- [How the Claude Code team thinks about verification](https://claude.dev/blog/how-the-claude-code-team-thinks-about-verification/), published 2026-11-16
 - [Claude Code docs, reviewing pull requests](https://code.claude.com/docs/en/code-review-pull-requests)
 - [Bugbot docs](https://cursor.com/docs/bugbot)
 - [Greptile changelog](https://www.greptile.com/changelog), [memory and learning](https://www.greptile.com/docs/how-greptile-works/memory-and-learning)
