@@ -9,7 +9,7 @@ Checked against [orchestration-best-practices.md](orchestration-best-practices.m
 | Worker count scales with the task | 2 | Size triage: line 37 "Worker count: one for a lookup" |
 | Cap on parallel workers: ten, below the default of 20 | 6 | Size triage: line 37 "At most ten workers in parallel" |
 | Route model by phase | 3 | Workers table: lines 12-21; Verification follows the phase: line 58 |
-| A change a person sees or drives is verified by running it | 3 | Verification follows the phase: line 58 "gets a `tradecraft:qa-runner` run" |
+| A task that changes a running app's behavior is verified by one run of the app | 3 | Verification follows the phase: line 58 "finish with one `tradecraft:qa-runner` run" |
 | No cheap model on code | 3 | Workers: line 26 "Never Haiku on a phase that writes or reviews code" |
 | Do not spawn `Explore`; the cheap read-only worker does the same search | 4 | Workers: line 26 "Never spawn `Explore`". Section 4 only mentions Explore as an agent that skips CLAUDE.md (line 50); the ban itself lives only in the skill. |
 | Name the file and function even in a short brief | 4 | Size triage: line 34 "**Inputs** with the exact files and symbols" |
