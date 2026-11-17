@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `/tradecraft:lead` ends a task that changes a running app's behavior with one `tradecraft:qa-runner` run against the app, and names the repository's `verify` skill in the brief when there is one.
 - `tradecraft:qa-runner` opens its own Chrome tab group and closes the tabs it created.
 
+### Fixed
+
+- `/tradecraft:pr-review` reads `REVIEW.md`, `CLAUDE.md`, `AGENTS.md`, and `CONTRIBUTING.md` at the base commit, so a PR cannot change the rules it is reviewed against.
+
 ## [0.7.0] - 2026-11-10
 
 ### Changed
