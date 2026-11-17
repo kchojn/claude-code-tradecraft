@@ -55,7 +55,7 @@ A larger task may run `tradecraft:scout` (map), `tradecraft:deep-reasoner` (desi
 
 ## Verification follows the phase
 
-Implement on the cheaper model, verify with the cheapest check that can catch the bug: the implementer's own test run first, a `tradecraft:scout` running the suite second, a `tradecraft:qa-runner` when only the running app shows the result, a `tradecraft:reviewer` when the change needs a reading of the diff that tests cannot give. Send verification to `tradecraft:deep-reasoner` only for work with many hidden edge cases: brownfield bugs, security, concurrency, parsers, data integrity. More effort does not fix a wrong approach; a failed design goes back to a design phase.
+Implement on the cheaper model. A change a person sees or drives gets a `tradecraft:qa-runner` run against the running app before the phase counts as done, whatever the tests say; when the repository has a `verify` skill, name it in the brief. For everything else, verify with the cheapest check that can catch the bug: the implementer's own test run first, a `tradecraft:scout` running the suite second, a `tradecraft:reviewer` when the change needs a reading of the diff that tests cannot give. Send verification to `tradecraft:deep-reasoner` only for work with many hidden edge cases: brownfield bugs, security, concurrency, parsers, data integrity. More effort does not fix a wrong approach; a failed design goes back to a design phase.
 
 ## Worker brief
 

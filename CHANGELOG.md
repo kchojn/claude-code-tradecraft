@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- `/tradecraft:lead` verifies a change a person sees or drives with a `tradecraft:qa-runner` run against the running app, and names the repository's `verify` skill in the brief when there is one.
+- `tradecraft:qa-runner` opens its own Chrome tab group and closes the tabs it created.
+
 ## [0.7.0] - 2026-11-10
 
 ### Changed
