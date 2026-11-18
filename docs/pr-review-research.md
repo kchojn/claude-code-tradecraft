@@ -193,6 +193,7 @@ Not adopted: naming out-of-scope findings in the body as the cloud review does, 
 
 These values in the skills have no cited source and no recorded run. Dates come from `git log -S`. No commit message gives a reason for any of them.
 
+- A worker is resumed at most three times (`skills/lead/SKILL.md`, delegation rules). Set from one session, where a worker resumed 24 times ran 637 calls to a 365k-token context; the cap of three is a judgment, and no run compares it with two or five. No measured source; change it when a run shows a better value.
 - Confidence floor of 60 for PLAUSIBLE at MEDIUM or higher (`skills/pr-review/SKILL.md` section 6). Set 2026-10-14, reworded into the single gate 2026-11-03. No measured source; change it when a run shows a better value.
 - `Up to 6 candidates per angle, up to 8 on high-risk`, and the gap sweep's `up to 8` (`skills/pr-review/SKILL.md` section 5). Set 2026-10-14. No measured source; change it when a run shows a better value.
 - Watcher `-P 3` (three reviews at once). Set 2026-11-03. The skill gives a reason, enough to drain a morning's requests without hitting rate limits, but no measurement. No measured source; change it when a run shows a better value.
@@ -220,6 +221,15 @@ A LOW-only round posted COMMENT, so a PR with nothing but minor findings waited 
 Adopted in section 14: CONFIRMED LOW only approves, with the LOW comments on the same review; the high-risk tier from section 3 still gets COMMENT. Every APPROVE passes a gate read at the race check: no failed check, no merge conflict, no `[Optional]` finding at MEDIUM or above. A failed gate posts COMMENT with a one-line reason.
 
 Not adopted: withholding approval while a check is pending, because a review rarely outlasts CI, the next review of the same head stops at once, and required checks still block the merge; withholding a zero-finding APPROVE on the high-risk tier, which this command has always given.
+
+## 20. Finders run in the foreground
+
+A headless review on 0.9.0 (`claude -p "/tradecraft:pr-review <url> --publish"`, started by the watcher) ended with the line "Both finders are running", cost about 4 USD, and posted nothing. The result file it left for that head made the watcher skip the PR on the next pass, so the failure also blocked a retry.
+
+- Claude Code's headless docs say a `claude -p` run "can stay open to wait for background work", but the wait is bounded: background subagents keep the run open "until each one finishes or the 10-minute cap ends the wait", and under `--bare` "Claude can't run background commands or background subagents". They also say a subagent's long command that moves to the background at its timeout lets a run "exit with code 0 before the command finishes". [Claude Code docs, headless, "Background tasks at exit" and "Start faster with bare mode"]
+- The docs therefore do not say the run ends with the turn, and the recorded run did not isolate which of these ended it. A finder in the foreground removes every one of them: the turn cannot end before the finder's report is in it.
+
+Adopted in section 4 of the skill: finders go in one message, in the foreground, never with `run_in_background`; the verifier still waits for all of them. Not adopted: a retry rule in the watcher for a result with no review, which would spend about 4 USD per pass while the cause stands.
 
 ## Sources
 

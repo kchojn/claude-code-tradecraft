@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- `/tradecraft:lead` asks before a push, delete or other outward action only when the user's own instructions do not already authorize it.
+- `/tradecraft:lead` fills "Blocked on me" with only what the user alone can do, and writes "Nothing" when that is empty.
+- `/tradecraft:lead` treats the newest user message as the scope after compaction instead of restarting from its arguments.
+- `/tradecraft:lead` briefs one `tradecraft:qa-runner` run per flow, resumes a worker at most three times, runs no gate or polling loop in its own background, and tells workers to wait for what they start and report once.
+
+### Fixed
+
+- `/tradecraft:pr-review` runs its finders in the foreground, so a headless review no longer ends before they report.
+
 ## [0.9.0] - 2026-11-17
 
 ### Changed

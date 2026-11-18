@@ -55,7 +55,7 @@ A larger task may run `tradecraft:scout` (map), `tradecraft:deep-reasoner` (desi
 
 ## Verification follows the phase
 
-Implement on the cheaper model. When a task changes how a running app behaves for the person using it, finish with one `tradecraft:qa-runner` run against the app, after the last writing phase and whatever the tests say; when the repository has a `verify` skill, name it in the brief. Skip it for trivial work and where there is no app to launch. For everything else, verify with the cheapest check that can catch the bug: the implementer's own test run first, a `tradecraft:scout` running the suite second, a `tradecraft:reviewer` when the change needs a reading of the diff that tests cannot give. Send verification to `tradecraft:deep-reasoner` only for work with many hidden edge cases: brownfield bugs, security, concurrency, parsers, data integrity. More effort does not fix a wrong approach; a failed design goes back to a design phase.
+Implement on the cheaper model. When a task changes how a running app behaves for the person using it, finish with one `tradecraft:qa-runner` run against the app, after the last writing phase and whatever the tests say; when the repository has a `verify` skill, name it in the brief. One `tradecraft:qa-runner` run covers one flow; a test with several flows is several briefs. Skip it for trivial work and where there is no app to launch. For everything else, verify with the cheapest check that can catch the bug: the implementer's own test run first, a `tradecraft:scout` running the suite second, a `tradecraft:reviewer` when the change needs a reading of the diff that tests cannot give. Send verification to `tradecraft:deep-reasoner` only for work with many hidden edge cases: brownfield bugs, security, concurrency, parsers, data integrity. More effort does not fix a wrong approach; a failed design goes back to a design phase.
 
 ## Worker brief
 
@@ -72,7 +72,7 @@ Rules for every brief:
 
 - Never delegate "investigate this" when a completion condition can be stated.
 - Never forward the whole conversation. For a dependent phase, summarize the earlier worker's relevant findings.
-- Tell the worker to issue its independent reads in one turn, and to write any result longer than a screen to a file in its scratchpad and return the path.
+- Tell the worker to issue its independent reads in one turn, and to write any result longer than a screen to a file in its scratchpad and return the path. Tell it to wait for what it starts, in the foreground or with Monitor, never to end its turn while its own background work runs, and to report once.
 - Parallel workers of one agent type get briefs that open with the same text, byte for byte; the worker's own slice comes last. They then share one cached prefix.
 
 ## Worker report
@@ -92,11 +92,14 @@ Enough to pick the next phase without redoing the work. No transcripts, no full 
 
 - Independent phases go in one message. Dependent phases wait for the earlier result.
 - Parallel writers get disjoint file sets. When they must touch the same files, give them `isolation: worktree` and merge yourself.
-- Act on **Status**. `NEEDS_CONTEXT`: supply it and resume the same worker; not a failure. `DONE_WITH_CONCERNS`: read the risks before choosing the next phase. `BLOCKED`: a failure.
+- Act on **Status**. `NEEDS_CONTEXT`: supply it and resume the same worker; not a failure. Resume a worker at most three times. A new review round gets a fresh worker and a summary of the last one. `DONE_WITH_CONCERNS`: read the risks before choosing the next phase. `BLOCKED`: a failure.
 - A phase fails when the worker cannot finish, a tool or execution error stops it, a blocker stays unresolved, or the result misses **Done when**. Retry on the same worker or a stronger one: `model: opus` for a failed `tradecraft:implementer` phase, `tradecraft:deep-reasoner` for a failed `tradecraft:reviewer` or `tradecraft:scout` phase, the same worker for a failed `tradecraft:qa-runner` phase or a `tradecraft:deep-reasoner` phase that an error stopped; never a cheaper one. A worker that hits its turn limit gets a narrower brief, not the same one again. A `tradecraft:deep-reasoner` report that reaches no conclusion, a phase that failed twice, or a next phase you cannot choose, goes once to `tradecraft:oracle` with the goal, the reason behind it, what was tried, the evidence, and the open question; run its plan on the normal roster. When a verdict stays disputed and an opinion from a different provider would settle it, ask Codex in one Bash call with the sandbox off: `node ~/.claude/plugins/cache/openai-codex/codex/<version>/scripts/codex-companion.mjs task --background "<prompt>"`, then `result <id>` from the same directory. Never pass `--write`, and never go through `/codex:rescue`: it adds a forwarding subagent and a write-capable default.
 - Trust completed worker output. Re-investigate only when evidence conflicts, acceptance criteria were missed, the worker flags decision-relevant uncertainty, or new evidence invalidates its assumptions, and then as a separate review phase.
-- Destructive and outward-facing actions stay with you, behind confirmation: push, delete, force operations, publishing, anything outside the repository.
+- Destructive and outward-facing actions stay with you: push, delete, force operations, publishing, anything outside the repository. Ask before one unless the user's own instructions already authorize it; when they do, act and do not ask again.
 - `tradecraft:deep-reasoner` returns a conclusion, risks, and a recommendation. Use them; do not redo the reasoning.
-- Report conclusions, not worker transcripts. End the final synthesis with three headings: **Blocked on me**, **Changed**, **Found**.
+- Report conclusions, not worker transcripts. End the final synthesis with three headings: **Blocked on me**, **Changed**, **Found**. **Blocked on me** lists only what the user alone can do; write "Nothing" when it is empty, and never put a question there that the task's sources answer.
+- Never run a gate or a polling loop in the background of your own thread; each completion is a full turn of yours.
+
+The arguments below opened this session. After the user's next message, the newest message sets the scope; never restart work from these arguments.
 
 $ARGUMENTS
