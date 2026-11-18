@@ -104,7 +104,7 @@ Rules:
 - Never spawn `Explore`: it inherits the main model.
 - Finding and verifying are separate workers with separate contexts: a finder that judges itself drops half-believed candidates before anyone checks them. The trivial tier (section 3) is the exception.
 - Normal PR: two workers, one finder and one verifier. High-risk: three; the second finder reads the files in reverse order so the two passes attend to different hunks first, and a candidate both finders raise is a stronger signal. Large: one finder per subsystem plus one verifier. Add a worker only when evidence conflicts, a HIGH or BLOCKER candidate stays uncertain, or a finder reported `NEEDS_CONTEXT`.
-- Independent finders go in one message. The verifier waits for all finders.
+- Independent finders go in one message, in the foreground: never `run_in_background`. A headless run can end before a background finder reports. The verifier waits for all finders.
 - Briefs share a cached prefix. Every brief to the same agent type opens with the same text, byte for byte: the section 1 lists, the angles, then the context pack. Only after that comes the worker's part: its subsystem, file order, or candidate list. A verifier on the finder's agent type then reads the finder's cache instead of writing its own.
 
 ## 5. Phase 1: find candidates
