@@ -1,6 +1,13 @@
 # claude-code-tradecraft
 
-A Claude Code plugin for people who want long tasks run by cheaper models under one lead, and for maintainers who want a PR review that posts only verified defects. Three skills (`/tradecraft:lead`, `/tradecraft:pr-review`, `/tradecraft:pr-review-watch`) and six model-routed subagents. Every rule in them traces to a cited source or a recorded run, or is listed as unmeasured in `docs/pr-review-research.md` section 17.
+A Claude Code plugin for two groups:
+
+- People who want long tasks run by cheaper models under one lead.
+- Maintainers who want a PR review that posts only verified defects.
+
+It has three skills (`/tradecraft:lead`, `/tradecraft:pr-review`, `/tradecraft:pr-review-watch`) and six model-routed subagents.
+
+Every rule in them traces to a cited source or a recorded run, or is listed as unmeasured in `docs/pr-review-research.md` section 17.
 
 ## Install
 
@@ -24,22 +31,44 @@ Prerequisites:
 - On macOS, GNU coreutils for `timeout`. The watcher uses it.
 - Optional: the OpenAI Codex plugin for Claude Code, for the disputed-verdict escalation.
 
+## Quick start
+
+1. Dry-run a review from a local clone of the PR's repository. It prints findings and touches nothing on GitHub:
+
+   ```
+   /tradecraft:pr-review <PR>
+   ```
+
+2. Hand a task to the lead. It splits the task into phases and delegates each to a worker:
+
+   ```
+   /tradecraft:lead <task>
+   ```
+
+3. Review PRs on a timer. Each pass publishes a review on every PR that requested your review, and needs your clone roots first (see the watcher section below):
+
+   ```
+   /loop 15m /tradecraft:pr-review-watch
+   ```
+
 ## What you get
 
 | Command | What it does |
 |---------|--------------|
 | `/tradecraft:lead <task>` | Runs a task as bounded phases, delegating each to a worker on the cheapest model that can do it. |
-| `/tradecraft:pr-review <PR number, URL, or branch> [--publish] [--deep] [--focus <text>]` | Reviews a PR with finders and a verifier. Dry run by default. |
+| `/tradecraft:pr-review <PR>` | Reviews a PR with finders and a verifier. Dry run by default. |
 | `/tradecraft:pr-review-watch [clone root]...` | One pass of a watcher that reviews PRs that requested your review. |
 
 | Agent | Model | Effort | Access | Role |
 |-------|-------|--------|--------|------|
 | `tradecraft:scout` | haiku | medium | read-only, no CLAUDE.md, 40 turns | Finds files and symbols, reads logs, runs existing checks. |
-| `tradecraft:qa-runner` | haiku | high | no edits, no CLAUDE.md, 80 turns | Runs manual and end-to-end test steps and reports pass or fail. |
+| `tradecraft:qa-runner` | haiku | high | no edits, no CLAUDE.md, 80 turns | Runs manual and end-to-end steps, reports pass/fail. |
 | `tradecraft:implementer` | sonnet | medium | writes | Writes code from a spec and runs the existing checks. |
 | `tradecraft:reviewer` | sonnet | high | read-only, no CLAUDE.md | Finds or verifies defects with `file:line` evidence. |
 | `tradecraft:deep-reasoner` | opus | high | no edits | Designs and debugs by reading code. |
-| `tradecraft:oracle` | fable | high | read-only | One decision call: a major design, a question Opus could not settle, or a phase that failed twice. |
+| `tradecraft:oracle` | fable | high | read-only | One decision call. |
+
+`tradecraft:oracle` takes a major design, a question Opus could not settle, or a phase that failed twice.
 
 Commands never pass `model`; the agent's frontmatter decides. The one exception is `model: opus` to retry a failed implementer phase.
 
@@ -47,15 +76,35 @@ Commands never pass `model`; the agent's frontmatter decides. The one exception 
 
 ![The /tradecraft:lead orchestration flow](docs/lead-flow.svg)
 
-Trivial work stays with the lead. Work of size S goes to one worker with a minimal brief and no phases. Everything else runs as bounded phases: define the phase, delegate it to one worker, and check the report against "done when". A failed phase retries on the same worker or a stronger one, and a second failure goes once to `tradecraft:oracle`. So do the plan for a major architecture, migration, or performance change, and a question `tradecraft:deep-reasoner` could not settle. A disputed verdict can go to the Codex companion script when the OpenAI Codex plugin is installed. At most ten workers run in parallel, and a worker is resumed at most three times. The lead asks before a push or another outward action only when the user's instructions do not already authorize it, and runs no gate or polling loop in its own background. A worker report opens with `DONE`, `DONE_WITH_CONCERNS`, `NEEDS_CONTEXT`, or `BLOCKED`, and the final synthesis ends with Blocked on me, which lists only what the user alone can do, then Changed and Found.
+Work goes one of three ways:
+
+- Trivial work stays with the lead.
+- Work of size S goes to one worker with a minimal brief and no phases.
+- Everything else runs as bounded phases: define the phase, delegate it to one worker, and check the report against "done when".
+
+When a phase fails:
+
+- It retries on the same worker or a stronger one.
+- A second failure goes once to `tradecraft:oracle`. So do the plan for a major architecture, migration, or performance change, and a question `tradecraft:deep-reasoner` could not settle.
+- A disputed verdict can go to the Codex companion script when the OpenAI Codex plugin is installed.
+
+Limits and reports:
+
+- At most ten workers run in parallel, and a worker is resumed at most three times.
+- The lead asks before a push or another outward action only when the user's instructions do not already authorize it.
+- The lead runs no gate or polling loop in its own background.
+- A worker report opens with `DONE`, `DONE_WITH_CONCERNS`, `NEEDS_CONTEXT`, or `BLOCKED`.
+- The final synthesis ends with Blocked on me, which lists only what the user alone can do, then Changed and Found.
 
 ## How /tradecraft:pr-review runs
 
 ![The /tradecraft:pr-review flow](docs/pr-review-flow.svg)
 
-The lead sorts the PR into a tier. A trivial PR stays with the lead, a normal one gets one recall-biased finder, a high-risk one gets two finders, the second reading the files in reverse order, and one verifier on `tradecraft:deep-reasoner`, and a large one gets one finder per subsystem. Finders run in the foreground, because a headless run can end before a background finder reports. One precision-biased verifier tries to disprove each candidate and must cite `file:line`. Verdicts are CONFIRMED, PLAUSIBLE, or REFUTED, and confidence (does the defect exist) is kept apart from severity (does it block).
+Usage:
 
-A CONFIRMED finding posts at any severity. A PLAUSIBLE one posts as `[Optional]` at confidence 70 or more, or 60 or more at MEDIUM severity or higher. The review event is REQUEST_CHANGES for HIGH or BLOCKER, COMMENT for MEDIUM (REQUEST_CHANGES for a MEDIUM whose impact blocks merge), and APPROVE when nothing or only LOW is confirmed. A LOW-only PR on the high-risk tier gets COMMENT. An APPROVE turns into COMMENT, with a one-line reason, when a check has failed, the PR has merge conflicts, or an `[Optional]` finding is MEDIUM or above. A re-review covers only the commits the author added since the last reviewed head, so a rebase or a merge of the base does not reopen reviewed code. From the third round only MEDIUM and above post.
+```
+/tradecraft:pr-review <PR number, URL, or branch> [--publish] [--deep] [--focus <text>]
+```
 
 Run it from a local clone of the PR's repository. It adds a detached worktree at the head commit under `$TMPDIR`.
 
@@ -63,11 +112,66 @@ Run it from a local clone of the PR's repository. It adds a detached worktree at
 - `--deep` forces the high-risk tier.
 - `--focus <text>` points the finders at a topic.
 
+Headless, the same command runs under `claude -p`. The watcher starts its reviews this way:
+
+```sh
+claude -p "/tradecraft:pr-review <url>"
+claude -p "/tradecraft:pr-review <url> --publish"
+```
+
+### Tiers
+
+The lead sorts the PR into a tier:
+
+| Tier | Who reviews |
+|------|-------------|
+| Trivial | The lead. |
+| Normal | One recall-biased finder. |
+| High-risk | Two finders, the second reading the files in reverse order, and one verifier on `tradecraft:deep-reasoner`. |
+| Large | One finder per subsystem. |
+
+Finders run in the foreground, because a headless run can end before a background finder reports.
+
+One precision-biased verifier tries to disprove each candidate and must cite `file:line`. Verdicts are CONFIRMED, PLAUSIBLE, or REFUTED. Confidence (does the defect exist) is kept apart from severity (does it block).
+
+### What gets posted
+
+- A CONFIRMED finding posts at any severity.
+- A PLAUSIBLE finding posts as `[Optional]` at confidence 70 or more, or at confidence 60 or more when its severity is MEDIUM or higher.
+- From the third round only MEDIUM and above post.
+
+A re-review covers only the commits the author added since the last reviewed head, so a rebase or a merge of the base does not reopen reviewed code.
+
+### Review event
+
+| Case | Event |
+|------|-------|
+| HIGH or BLOCKER | REQUEST_CHANGES |
+| MEDIUM | COMMENT |
+| MEDIUM whose impact blocks merge | REQUEST_CHANGES |
+| Nothing confirmed, or only LOW | APPROVE |
+| LOW only, on the high-risk tier | COMMENT |
+
+An APPROVE turns into COMMENT, with a one-line reason, when any of these holds:
+
+- A check has failed.
+- The PR has merge conflicts.
+- An `[Optional]` finding is MEDIUM or above.
+
 ## How /tradecraft:pr-review-watch runs
 
 ![The /tradecraft:pr-review-watch flow](docs/pr-review-watch-flow.svg)
 
-One pass finds open, non-draft PRs that requested your review in the last 24 hours. It skips PRs already reviewed at their head commit and PRs with a result file for that head. It finds the local clone under your roots and never clones. It then runs one `claude -p "/tradecraft:pr-review <url> --publish"` per PR, three at a time, in a background batch. Each review is capped at 60 minutes and 10 USD. Run it on a timer with `/loop 15m /tradecraft:pr-review-watch`. A `/loop` expires after seven days and must be started again.
+One pass:
+
+1. Finds open, non-draft PRs that requested your review in the last 24 hours.
+2. Skips PRs already reviewed at their head commit and PRs with a result file for that head.
+3. Finds the local clone under your roots. It never clones.
+4. Runs one `claude -p "/tradecraft:pr-review <url> --publish"` per PR, three at a time, in a background batch.
+
+Each review is capped at 60 minutes and 10 USD.
+
+Run it on a timer with `/loop 15m /tradecraft:pr-review-watch`. A `/loop` expires after seven days and must be started again.
 
 Roots come from the arguments or from `~/.config/pr-review-watch/roots`, one directory per line, `~` allowed. That file does not exist until you write it.
 
@@ -77,23 +181,16 @@ Roots come from the arguments or from `~/.config/pr-review-watch/roots`, one dir
 - `~/.cache/pr-review-watch/results/<owner>/<repo>/<number>-<head7>.json` and `.err` hold the one attempt at that head.
 - To retry a PR at the same head, delete its result file.
 
-## Headless use
-
-```sh
-claude -p "/tradecraft:pr-review <url>"
-claude -p "/tradecraft:pr-review <url> --publish"
-```
-
-The watcher starts its reviews this way.
-
 ## Layout
 
 | Path | Contents |
 |------|----------|
-| `skills/lead/SKILL.md`, `skills/pr-review/SKILL.md`, `skills/pr-review-watch/SKILL.md` | The three commands. |
+| `skills/lead/SKILL.md` | The `/tradecraft:lead` command. |
+| `skills/pr-review/SKILL.md` | The `/tradecraft:pr-review` command. |
+| `skills/pr-review-watch/SKILL.md` | The `/tradecraft:pr-review-watch` command. |
 | `agents/` | The six subagent definitions. |
 | `docs/orchestration-best-practices.md` | Sourced rules behind `/tradecraft:lead` and the agents. |
-| `docs/pr-review-research.md` | What published review systems do, which of it `/tradecraft:pr-review` adopts, and recorded runs. |
+| `docs/pr-review-research.md` | What published review systems do, what `/tradecraft:pr-review` adopts, recorded runs. |
 | `docs/lead-review.md` | Each practice mapped to the line in the lead skill that implements it. |
 | `docs/*-flow.html`, `docs/*-flow.svg` | The three flowcharts above. The HTML is the source. |
 | `docs/social-preview.html`, `docs/social-preview.png` | The GitHub social preview card and its 1280x640 export. |
@@ -103,7 +200,13 @@ The watcher starts its reviews this way.
 
 ## Why these rules
 
-Prompt rules drift when nobody can say where they came from. Here each rule sits in a doc with its source: an official reference, a published system, or a measured run. The rules set without a source are listed in `docs/pr-review-research.md` section 17. `docs/orchestration-best-practices.md` holds the rules for delegation, model routing, and briefs. `docs/pr-review-research.md` holds what published review systems do and what the real runs showed. A skill changes only after its rule changes in the doc.
+Prompt rules drift when nobody can say where they came from. Here each rule sits in a doc with its source: an official reference, a published system, or a measured run.
+
+- The rules set without a source are listed in `docs/pr-review-research.md` section 17.
+- `docs/orchestration-best-practices.md` holds the rules for delegation, model routing, and briefs.
+- `docs/pr-review-research.md` holds what published review systems do and what the real runs showed.
+
+A skill changes only after its rule changes in the doc.
 
 ## Contributing
 
