@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- `/tradecraft:pr-review-watch` starts each review with `CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS=0`, so a headless review is no longer stopped ten minutes after its lead's last turn while the finders still run.
+- `/tradecraft:pr-review-watch` caps a review at 25 USD and 90 minutes instead of 10 USD and 60 minutes; the old cap ran out before the verifier on high-risk PRs, and the review posted nothing.
+- `/tradecraft:pr-review-watch` reports a review that posted nothing as `not posted` with its `Mode:` line, instead of a line that reads like a finished review.
+- `/tradecraft:pr-review` no longer rests on finders running in the foreground, a rule a headless run on 0.10.0 did not keep; the lead waits for every finder's completion notice before the verifier.
+
 ## [0.10.0] - 2026-11-18
 
 ### Changed

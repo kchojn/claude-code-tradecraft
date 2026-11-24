@@ -37,7 +37,7 @@ For each PR:
 gh pr view <number> -R <owner/repo> --json state,isDraft,headRefOid,reviewRequests,reviews
 ```
 
-Skip it unless `state` is `OPEN` and `isDraft` is false: the search index lags, so a PR merged or closed minutes ago still shows up as open. Skip it when your login (`gh api user -q .login`, fetched once per pass) is not in `reviewRequests`: the search index lags, and the request may already be gone. Skip it when a review by your login with `state` other than `PENDING` has `commit.oid` equal to `headRefOid`: that covers index lag the other way and a re-request with no new commits, which gets no second review. Skip it when `results/<owner>/<repo>/<number>-<head7>.json` exists: one attempt per head, so a review that failed does not run again in every batch until the author pushes.
+Skip it unless `state` is `OPEN` and `isDraft` is false: the search index lags, so a PR merged or closed minutes ago still shows up as open. Skip it when your login (`gh api user -q .login`, fetched once per pass) is not in `reviewRequests`: the search index lags, and the request may already be gone. Skip it when a review by your login with `state` other than `PENDING` has `commit.oid` equal to `headRefOid`: that covers index lag the other way and a re-request with no new commits, which gets no second review. Skip it when `results/<owner>/<repo>/<number>-<head7>.json` exists: one attempt per head, so a review that failed does not run again in every batch until the author pushes. Deleting that file is how the user asks for a second attempt.
 
 Then keep only requests made in the last 24 hours. The search window above is on PR activity, not on the request, so an old request on a PR that got a comment today would slip through it. The PR timeline has the exact event:
 
@@ -59,15 +59,16 @@ When no PR remains, release the lock and print one line that says why: `no new r
 ```sh
 printf '%s\t%s\t%s\n' <clone> <url> <owner>/<repo>/<number>-<head7> ... | xargs -P 3 -L 1 sh -c '
   mkdir -p ~/.cache/pr-review-watch/results/$(dirname "$2")
-  cd "$0" && timeout -k 30s 60m claude -p "/tradecraft:pr-review $1 --publish" \
+  cd "$0" && CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS=0 timeout -k 30s 90m \
+    claude -p "/tradecraft:pr-review $1 --publish" \
     --permission-mode auto --permission-prompts none \
     --disallowedTools "Edit,Write,NotebookEdit" \
-    --strict-mcp-config --max-budget-usd 10 \
+    --strict-mcp-config --max-budget-usd 25 \
     --no-session-persistence --output-format json \
     > ~/.cache/pr-review-watch/results/$2.json 2> ~/.cache/pr-review-watch/results/$2.err'
 ```
 
-Why each piece: `-P 3` runs three reviews at once, enough to drain a morning's requests without a dozen concurrent agents hitting rate limits, and the next starts when one finishes; `timeout` bounds one stuck review so the lock is not held forever (macOS gets it from coreutils); nobody answers prompts, so `--permission-prompts none` denies instead of hanging; `--disallowedTools` blocks the file-editing tools, the review's own rules cover the shell; `--strict-mcp-config` skips every MCP server, which the review does not use and which cost tokens on every call; `--max-budget-usd` caps one runaway review; `--no-session-persistence` leaves nothing in `/resume`.
+Why each piece: `-P 3` runs three reviews at once, enough to drain a morning's requests without a dozen concurrent agents hitting rate limits, and the next starts when one finishes; `CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS=0` keeps the run open until the review's finders and verifier report: they run as background subagents, and by default a `-p` run stops them after ten minutes of idle waiting and exits with nothing posted; `timeout` is then the only bound on one stuck review, so the lock is not held forever (macOS gets it from coreutils); nobody answers prompts, so `--permission-prompts none` denies instead of hanging; `--disallowedTools` blocks the file-editing tools, the review's own rules cover the shell; `--strict-mcp-config` skips every MCP server, which the review does not use and which cost tokens on every call; `--max-budget-usd` caps one runaway review, and sits above what a high-risk review costs, because a run that reaches the cap before its verifier posts nothing; `--no-session-persistence` leaves nothing in `/resume`.
 
 One PR failing does not stop the rest. Then print `reviewing <n> PRs: <owner/repo>#<number> ...` and end the turn. Never read a review transcript into this session.
 
@@ -79,4 +80,4 @@ When the background command's completion notice arrives, read only the `Review:`
 <owner/repo>#<number>: <Review event>, <findings> findings, highest <severity or none>
 ```
 
-When the file is not valid JSON or `is_error` is true, print `failed <owner/repo>#<number>` and the paths of the `.json` and `.err` files. When `.result` has none of those lines, `/tradecraft:pr-review` stopped early, for example on a draft; print its first line.
+When the file is not valid JSON or `is_error` is true, print `failed <owner/repo>#<number>` and the paths of the `.json` and `.err` files. A run that posted nothing still exits as a success, so check for the post: when `.result` has no `Review:` line, or the line reads `Review: none`, print `not posted <owner/repo>#<number>: ` and the `Mode:` line, or the first line of `.result` when there is no `Mode:` line, then the path of the `.json` file. That covers a review that stopped early, for example on a draft, one that ran out of budget or time before its verifier, and one a project rule withheld. Never start a second attempt yourself: it would spend up to the cap again on each head.
