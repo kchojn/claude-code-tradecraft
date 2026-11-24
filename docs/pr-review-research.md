@@ -237,11 +237,12 @@ Section 21 replaces the foreground rule: a run on 0.10.0 still started its finde
 
 Three watcher reviews on 0.10.0 (Claude Code 2.1.331, 2026-11-19 to 2026-11-24) posted nothing, each on a high-risk PR, and each left a result file with `is_error: false` that used up the head's one attempt. [measured, result files under `~/.cache/pr-review-watch/results/`]
 
-| run | cost | ended | cause |
+| run | cost | ended | cause or setting |
 |-----|------|-------|-------|
 | PR A | 8.68 USD | after both finders, no verifier | budget: about 1.40 USD of the 10 USD cap was left |
 | PR B, first run | 9.03 USD | after both finders, no verifier | budget: about 1 USD of the cap was left |
 | PR B, second run | 5.42 USD | lead's turn ended 71 seconds in, with the line "Two finders are reading" | stderr: "Background tasks still running 10m after the last turn (subagent ...); stopping them. Set CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS=0 to wait indefinitely." |
+| PR B, third run | 15.67 USD | posted `REQUEST_CHANGES` with 4 findings after 29 minutes and 15 lead turns | run by hand with `CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS=0`, `--max-budget-usd 25` and `timeout 90m` |
 
 - The second run of PR B ran under the section 20 rule and still started both finders in the background. The docs say why the rule cannot be relied on: "With nothing configured, a subagent other than web-fetch that Claude spawns from your main conversation starts in the background", and under `claude -p` "Claude can wait, on its own judgment or when you ask". Waiting is the model's choice on each run, not a setting of the skill. [Claude Code docs, sub-agents, "Run subagents in foreground or background"]
 - A background finder is not lost by itself: "A background subagent's results reach Claude as a completion notification in a later turn", and a `-p` run "stays open until each one finishes or the 10-minute cap ends the wait". The cap is `CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS`: "Ceiling in milliseconds on idle waiting for background work, such as subagents and workflows, after the final turn in non-interactive mode with the -p flag. Idle waiting starts over each time Claude takes a turn to handle a background result. Default: 600000, or 10 minutes. [...] Set to 0 to wait indefinitely." A finder on a large diff runs longer than ten minutes with no lead turn in between, so the default ends the run. [Claude Code docs, headless, "Background tasks at exit"; environment variables]
@@ -252,7 +253,7 @@ Adopted:
 
 - The watcher starts each review with `CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS=0`; its `timeout` is the outer bound. The README shows the same variable for a review started by hand.
 - Section 4 of the skill no longer asks for the foreground. The lead ends its turn while finders run in the background, continues on their completion notices, and never verifies or publishes on a partial set.
-- `--max-budget-usd 25`: about three times the highest cost of a finished high-risk review, so a review with a slow verifier still posts, and a runaway is still bounded.
+- `--max-budget-usd 25`: the third run of PR B needed 15.67 USD to post, so the cap leaves that review about 9 USD of room and still bounds a runaway.
 - The watcher's report prints `not posted` with the run's `Mode:` line for a result with no `Review:` line or `Review: none`. Before, the batch report printed such a run's `Findings:` line, which read like a finished review.
 
 Not adopted:
