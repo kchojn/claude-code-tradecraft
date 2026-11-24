@@ -197,7 +197,7 @@ These values in the skills have no cited source and no recorded run. Dates come 
 - Confidence floor of 60 for PLAUSIBLE at MEDIUM or higher (`skills/pr-review/SKILL.md` section 6). Set 2026-10-14, reworded into the single gate 2026-11-03. No measured source; change it when a run shows a better value.
 - `Up to 6 candidates per angle, up to 8 on high-risk`, and the gap sweep's `up to 8` (`skills/pr-review/SKILL.md` section 5). Set 2026-10-14. No measured source; change it when a run shows a better value.
 - Watcher `-P 3` (three reviews at once). Set 2026-11-03. The skill gives a reason, enough to drain a morning's requests without hitting rate limits, but no measurement. No measured source; change it when a run shows a better value.
-- Watcher `90m` timeout per review (`skills/pr-review-watch/SKILL.md`). Raised from `60m` with section 21; the longest recorded review took 20 minutes, so the value is a margin, not a measurement. No measured source; change it when a run shows a better value. The budget cap left this list: section 21 measures it.
+- Watcher `90m` timeout per review (`skills/pr-review-watch/SKILL.md`). Raised from `60m` with section 21; the longest recorded review took 29 minutes, so the value is a margin, not a measurement. No measured source; change it when a run shows a better value. The budget cap left this list: section 21 measures it.
 - Second finder on the high-risk tier (`skills/pr-review/SKILL.md` section 4). Set after Bugbot's reordering trick (section 1); the verification post says adding a second reviewer is "often a worse approach than tuning the primary". No run here compares one finder with two. No measured source; change it when a run shows a better value. [How the Claude Code team thinks about verification]
 
 ## 18. Rule files come from the base
@@ -235,7 +235,7 @@ Section 21 replaces the foreground rule: a run on 0.10.0 still started its finde
 
 ## 21. A headless review waits for its workers and has the budget to finish
 
-Three watcher reviews on 0.10.0 (Claude Code 2.1.331, 2026-11-19 to 2026-11-24) posted nothing, each on a high-risk PR, and each left a result file with `is_error: false` that used up the head's one attempt. [measured, result files under `~/.cache/pr-review-watch/results/`]
+Headless reviews of two high-risk PRs, started with the watcher's command on 2026-11-23 and 2026-11-24, posted nothing three times. Each left a result file with `is_error: false`, and a watcher result of that kind uses up the head's one attempt. The second and third runs of PR B were started by hand, on plugin 0.10.0 and Claude Code 2.1.331; the third changed three settings and posted. Two older result files, from 2026-11-10 and 2026-11-17, end the same way as the second run: a first line that says the finders are still running, and no report. [measured, result files under `~/.cache/pr-review-watch/results/`]
 
 | run | cost | ended | cause or setting |
 |-----|------|-------|-------|
@@ -260,7 +260,7 @@ Not adopted:
 
 - An automatic second attempt for a result that posted nothing: it spends up to the cap again on every such head, and a review a project rule withheld would run again on every pass. The user deletes the result file to ask for one.
 - `CLAUDE_CODE_DISABLE_BACKGROUND_TASKS=1`, which the docs say makes Claude wait for subagents: it also removes background shell commands, and no run here has tried a review under it.
-- A lower cap with the verifier on a cheaper model: section 4 routes the high-risk verifier to `tradecraft:deep-reasoner` on evidence in section 1, and a cost cap is no reason to weaken it.
+- A lower cap with the verifier on a cheaper model: no run here compares verifiers, so the routing in section 4 of the skill stays, and the cap moves instead.
 
 ## Sources
 

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- `/tradecraft:pr-review-watch` reads the `Mode:` line of a result, which its `not posted` report line needs; the 0.10.1 text read only the three summary lines.
+
 ## [0.10.1] - 2026-11-24
 
 ### Fixed
