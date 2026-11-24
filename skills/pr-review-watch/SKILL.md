@@ -74,7 +74,7 @@ One PR failing does not stop the rest. Then print `reviewing <n> PRs: <owner/rep
 
 ## 6. Report a finished batch
 
-When the background command's completion notice arrives, read only the `Review:`, `Findings:`, and `Highest:` lines from each result file's `.result` (`jq -r .result <file> | grep -E '^(Review|Findings|Highest):'`) and print one line per PR:
+When the background command's completion notice arrives, read only the `Mode:`, `Review:`, `Findings:`, and `Highest:` lines from each result file's `.result` (`jq -r .result <file> | grep -E '^(Mode|Review|Findings|Highest):'`), plus its first line when none of them is there (`jq -r .result <file> | head -1`), and print one line per PR that posted:
 
 ```
 <owner/repo>#<number>: <Review event>, <findings> findings, highest <severity or none>
