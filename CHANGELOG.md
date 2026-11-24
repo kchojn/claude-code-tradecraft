@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.1] - 2026-11-24
+
 ### Fixed
 
 - `/tradecraft:pr-review-watch` starts each review with `CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS=0`, so a headless review is no longer stopped ten minutes after its lead's last turn while the finders still run.
@@ -164,7 +166,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `/pr-review` scores confidence on whether the defect exists, and posts CONFIRMED findings at every severity.
 - High-confidence PLAUSIBLE items appear in the review body, and a gap between what is shown and what is executed rates MEDIUM.
 
-[Unreleased]: https://github.com/kchojn/claude-code-tradecraft/compare/v0.10.0...HEAD
+[Unreleased]: https://github.com/kchojn/claude-code-tradecraft/compare/v0.10.1...HEAD
+[0.10.1]: https://github.com/kchojn/claude-code-tradecraft/compare/v0.10.0...v0.10.1
 [0.10.0]: https://github.com/kchojn/claude-code-tradecraft/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/kchojn/claude-code-tradecraft/compare/v0.8.0...v0.9.0
 [0.8.0]: https://github.com/kchojn/claude-code-tradecraft/compare/v0.7.0...v0.8.0
