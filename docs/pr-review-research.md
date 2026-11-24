@@ -197,7 +197,7 @@ These values in the skills have no cited source and no recorded run. Dates come 
 - Confidence floor of 60 for PLAUSIBLE at MEDIUM or higher (`skills/pr-review/SKILL.md` section 6). Set 2026-10-14, reworded into the single gate 2026-11-03. No measured source; change it when a run shows a better value.
 - `Up to 6 candidates per angle, up to 8 on high-risk`, and the gap sweep's `up to 8` (`skills/pr-review/SKILL.md` section 5). Set 2026-10-14. No measured source; change it when a run shows a better value.
 - Watcher `-P 3` (three reviews at once). Set 2026-11-03. The skill gives a reason, enough to drain a morning's requests without hitting rate limits, but no measurement. No measured source; change it when a run shows a better value.
-- Watcher `60m` timeout per review and `--max-budget-usd 10` per review (`skills/pr-review-watch/SKILL.md`). Both set 2026-11-03. No measured source; change it when a run shows a better value.
+- Watcher `90m` timeout per review (`skills/pr-review-watch/SKILL.md`). Raised from `60m` with section 21; the longest recorded review took 20 minutes, so the value is a margin, not a measurement. No measured source; change it when a run shows a better value. The budget cap left this list: section 21 measures it.
 - Second finder on the high-risk tier (`skills/pr-review/SKILL.md` section 4). Set after Bugbot's reordering trick (section 1); the verification post says adding a second reviewer is "often a worse approach than tuning the primary". No run here compares one finder with two. No measured source; change it when a run shows a better value. [How the Claude Code team thinks about verification]
 
 ## 18. Rule files come from the base
@@ -231,6 +231,37 @@ A headless review on 0.9.0 (`claude -p "/tradecraft:pr-review <url> --publish"`,
 
 Adopted in section 4 of the skill: finders go in one message, in the foreground, never with `run_in_background`; the verifier still waits for all of them. Not adopted: a retry rule in the watcher for a result with no review, which would spend about 4 USD per pass while the cause stands.
 
+Section 21 replaces the foreground rule: a run on 0.10.0 still started its finders in the background and lost them.
+
+## 21. A headless review waits for its workers and has the budget to finish
+
+Three watcher reviews on 0.10.0 (Claude Code 2.1.331, 2026-11-19 to 2026-11-24) posted nothing, each on a high-risk PR, and each left a result file with `is_error: false` that used up the head's one attempt. [measured, result files under `~/.cache/pr-review-watch/results/`]
+
+| run | cost | ended | cause or setting |
+|-----|------|-------|-------|
+| PR A | 8.68 USD | after both finders, no verifier | budget: about 1.40 USD of the 10 USD cap was left |
+| PR B, first run | 9.03 USD | after both finders, no verifier | budget: about 1 USD of the cap was left |
+| PR B, second run | 5.42 USD | lead's turn ended 71 seconds in, with the line "Two finders are reading" | stderr: "Background tasks still running 10m after the last turn (subagent ...); stopping them. Set CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS=0 to wait indefinitely." |
+| PR B, third run | 15.67 USD | posted `REQUEST_CHANGES` with 4 findings after 29 minutes and 15 lead turns | run by hand with `CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS=0`, `--max-budget-usd 25` and `timeout 90m` |
+
+- The second run of PR B ran under the section 20 rule and still started both finders in the background. The docs say why the rule cannot be relied on: "With nothing configured, a subagent other than web-fetch that Claude spawns from your main conversation starts in the background", and under `claude -p` "Claude can wait, on its own judgment or when you ask". Waiting is the model's choice on each run, not a setting of the skill. [Claude Code docs, sub-agents, "Run subagents in foreground or background"]
+- A background finder is not lost by itself: "A background subagent's results reach Claude as a completion notification in a later turn", and a `-p` run "stays open until each one finishes or the 10-minute cap ends the wait". The cap is `CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS`: "Ceiling in milliseconds on idle waiting for background work, such as subagents and workflows, after the final turn in non-interactive mode with the -p flag. Idle waiting starts over each time Claude takes a turn to handle a background result. Default: 600000, or 10 minutes. [...] Set to 0 to wait indefinitely." A finder on a large diff runs longer than ten minutes with no lead turn in between, so the default ends the run. [Claude Code docs, headless, "Background tasks at exit"; environment variables]
+- `--max-budget-usd` counts subagent spend, and "Once spend reaches the cap, spawning another subagent fails with Budget limit reached, and Claude Code stops background subagents that are still running". The verifier is the last spawn, so a cap that is too low always costs the whole review. [Claude Code docs, CLI reference]
+- Of the 49 recorded reviews that used workers and posted under the 10 USD cap, the costliest took 8.19 USD and 12 took more than 7 USD. Two more reached 8.68 and 9.03 USD before the verifier. The cap sat inside the normal range of the tier it had to cover. [measured, same result files]
+
+Adopted:
+
+- The watcher starts each review with `CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS=0`; its `timeout` is the outer bound. The README shows the same variable for a review started by hand.
+- Section 4 of the skill no longer asks for the foreground. The lead ends its turn while finders run in the background, continues on their completion notices, and never verifies or publishes on a partial set.
+- `--max-budget-usd 25`: the third run of PR B needed 15.67 USD to post, so the cap leaves that review about 9 USD of room and still bounds a runaway.
+- The watcher's report prints `not posted` with the run's `Mode:` line for a result with no `Review:` line or `Review: none`. Before, the batch report printed such a run's `Findings:` line, which read like a finished review.
+
+Not adopted:
+
+- An automatic second attempt for a result that posted nothing: it spends up to the cap again on every such head, and a review a project rule withheld would run again on every pass. The user deletes the result file to ask for one.
+- `CLAUDE_CODE_DISABLE_BACKGROUND_TASKS=1`, which the docs say makes Claude wait for subagents: it also removes background shell commands, and no run here has tried a review under it.
+- A lower cap with the verifier on a cheaper model: section 4 routes the high-risk verifier to `tradecraft:deep-reasoner` on evidence in section 1, and a cost cap is no reason to weaken it.
+
 ## Sources
 
 - Claude Code built-in `/code-review` recipe, extracted from the `claude` 2.1.299 binary (strings `Angle A`, `PLAUSIBLE by default`, `Sweep for gaps`)
@@ -263,7 +294,7 @@ Adopted in section 4 of the skill: finders go in one message, in the foreground,
 - [Greptile, your first PR review](https://www.greptile.com/docs/code-review/first-pr-review)
 - [GitHub docs, collapsed sections](https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/organizing-information-with-collapsed-sections), [commenting on a pull request](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/reviewing-changes-in-pull-requests/commenting-on-a-pull-request), [basic formatting syntax, alerts](https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax)
 - [Conventional Comments](https://conventionalcomments.org)
-- [Claude Code docs: headless](https://code.claude.com/docs/en/headless), [CLI reference](https://code.claude.com/docs/en/cli-reference), [permission modes](https://code.claude.com/docs/en/permission-modes), [scheduled tasks](https://code.claude.com/docs/en/scheduled-tasks), [skills](https://code.claude.com/docs/en/skills)
+- [Claude Code docs: headless](https://code.claude.com/docs/en/headless), [CLI reference](https://code.claude.com/docs/en/cli-reference), [permission modes](https://code.claude.com/docs/en/permission-modes), [scheduled tasks](https://code.claude.com/docs/en/scheduled-tasks), [skills](https://code.claude.com/docs/en/skills), [sub-agents](https://code.claude.com/docs/en/sub-agents), [environment variables](https://code.claude.com/docs/en/env-vars)
 - [Solving code review at Anthropic](https://claude.dev/blog/solving-code-review-at-anthropic/)
 - [How the Claude Code team thinks about verification](https://claude.dev/blog/how-the-claude-code-team-thinks-about-verification/), published 2026-11-16
 - [Claude Code docs, reviewing pull requests](https://code.claude.com/docs/en/code-review-pull-requests)

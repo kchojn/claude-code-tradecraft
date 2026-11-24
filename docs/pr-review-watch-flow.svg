@@ -99,7 +99,7 @@
         <rect x="224" y="564" width="256" height="64" rx="6" fill="#0f766e" stroke="#0f766e" stroke-width="1" fill-opacity="0.08"/>
         <text x="352" y="588" fill="#16212b" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">One claude -p per PR</text>
         <text x="352" y="604" fill="#5b6773" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">/tradecraft:pr-review &lt;url&gt; --publish</text>
-        <text x="352" y="616" fill="#5b6773" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">3 at once, 60m cap, unsaved</text>
+        <text x="352" y="616" fill="#5b6773" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">3 at once, 90m cap, unsaved</text>
 
         <!-- End oval: One line per PR -->
         <rect x="248" y="660" width="208" height="48" rx="20" fill="#f7f6f1"/>

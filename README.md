@@ -115,9 +115,11 @@ Run it from a local clone of the PR's repository. It adds a detached worktree at
 Headless, the same command runs under `claude -p`. The watcher starts its reviews this way:
 
 ```sh
-claude -p "/tradecraft:pr-review <url>"
-claude -p "/tradecraft:pr-review <url> --publish"
+CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS=0 claude -p "/tradecraft:pr-review <url>"
+CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS=0 claude -p "/tradecraft:pr-review <url> --publish"
 ```
+
+The variable matters: finders and the verifier run as background subagents, and without it `claude -p` stops them after ten minutes of idle waiting and exits with nothing posted. Put a `timeout` around the run, as the watcher does.
 
 ### Tiers
 
@@ -130,7 +132,7 @@ The lead sorts the PR into a tier:
 | High-risk | Two finders, the second reading the files in reverse order, and one verifier on `tradecraft:deep-reasoner`. |
 | Large | One finder per subsystem. |
 
-Finders run in the foreground, because a headless run can end before a background finder reports.
+The verifier starts only when every finder has reported.
 
 One precision-biased verifier tries to disprove each candidate and must cite `file:line`. Verdicts are CONFIRMED, PLAUSIBLE, or REFUTED. Confidence (does the defect exist) is kept apart from severity (does it block).
 
@@ -169,7 +171,7 @@ One pass:
 3. Finds the local clone under your roots. It never clones.
 4. Runs one `claude -p "/tradecraft:pr-review <url> --publish"` per PR, three at a time, in a background batch.
 
-Each review is capped at 60 minutes and 10 USD.
+Each review is capped at 90 minutes and 25 USD. A review that posted nothing shows up as `not posted` in the batch report; delete its result file to let the next pass try that head again.
 
 Run it on a timer with `/loop 15m /tradecraft:pr-review-watch`. A `/loop` expires after seven days and must be started again.
 
