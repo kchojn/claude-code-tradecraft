@@ -94,6 +94,7 @@ Limits and reports:
 - The lead asks before a push or another outward action only when the user's instructions do not already authorize it.
 - The lead runs no gate or polling loop in its own background.
 - A worker report opens with `DONE`, `DONE_WITH_CONCERNS`, `NEEDS_CONTEXT`, or `BLOCKED`.
+- A worker report has a Friction field for a tool, flag or doc that did not behave as documented; the lead lists each one under Found.
 - The final synthesis ends with Blocked on me, which lists only what the user alone can do, then Changed and Found.
 
 ## How /tradecraft:pr-review runs
@@ -106,7 +107,7 @@ Usage:
 /tradecraft:pr-review <PR number, URL, or branch> [--publish] [--deep] [--focus <text>]
 ```
 
-Run it from a local clone of the PR's repository. It adds a detached worktree at the head commit under `$TMPDIR`.
+Run it from a local clone of the PR's repository. It adds a detached worktree at the head commit under `$TMPDIR`, with the clone's git hooks off, and gives the workers its absolute path.
 
 - `--publish` posts one GitHub review with the inline comments. Without it the run prints findings and dropped candidates and touches nothing on GitHub.
 - `--deep` forces the high-risk tier.
@@ -142,6 +143,8 @@ One precision-biased verifier tries to disprove each candidate and must cite `fi
 - A PLAUSIBLE finding posts as `[Optional]` at confidence 70 or more, or at confidence 60 or more when its severity is MEDIUM or higher.
 - From the third round only MEDIUM and above post.
 
+A review runs a test from the PR only when the PR is not from a fork. A branch in the repository can only be pushed by someone the repository gave write access, and the review trusts the repository's writers. A fork PR is code from anyone, and a test run executes it on your machine under your credentials; the verdict then rests on reading, the workers are told `Test runs: not allowed (fork PR)`, the review body says `Tests not run: fork PR.`, and `Residual risk` says `tests not run: fork PR`.
+
 A re-review covers only the commits the author added since the last reviewed head, so a rebase or a merge of the base does not reopen reviewed code.
 
 ### Review event
@@ -159,6 +162,8 @@ An APPROVE turns into COMMENT, with a one-line reason, when any of these holds:
 - A check has failed.
 - The PR has merge conflicts.
 - An `[Optional]` finding is MEDIUM or above.
+- Auto-merge is on, because the approval could be the last condition and GitHub would merge with no person acting.
+- The PR is from a fork and a HIGH or BLOCKER candidate stayed PLAUSIBLE only because the test run was withheld (`tests not run on a fork PR`).
 
 ## How /tradecraft:pr-review-watch runs
 
@@ -171,7 +176,7 @@ One pass:
 3. Finds the local clone under your roots. It never clones.
 4. Runs one `claude -p "/tradecraft:pr-review <url> --publish"` per PR, three at a time, in a background batch.
 
-Each review is capped at 90 minutes and 25 USD. A review that posted nothing shows up as `not posted` in the batch report; delete its result file to let the next pass try that head again.
+Each review is capped at 90 minutes and 25 USD. The batch report ends each PR's line with the review's cost, lead turns and minutes. A review that posted nothing shows up as `not posted`; delete its result file to let the next pass try that head again.
 
 Run it on a timer with `/loop 15m /tradecraft:pr-review-watch`. A `/loop` expires after seven days and must be started again.
 

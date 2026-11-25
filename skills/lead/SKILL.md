@@ -84,6 +84,7 @@ The default return format:
 - **Files changed**: paths and a short diffstat. Read-only phases: key evidence and the locations inspected.
 - **Verification**: tests, commands, or checks run, with results. Workers add tests only when the brief says so.
 - **Risks / blockers**: unresolved issues, a premise that did not hold, S work that turned out to be M+.
+- **Friction**: a tool, flag, command or doc line that did not behave as documented (a flag the help lists and the tool rejects, a command that exits 0 on an error, a doc line that is wrong): what was tried, what was expected, what happened. Omit it when there was none.
 - **Deferred**: follow-ups left out on purpose.
 
 Enough to pick the next phase without redoing the work. No transcripts, no full command output.
@@ -97,7 +98,7 @@ Enough to pick the next phase without redoing the work. No transcripts, no full 
 - Trust completed worker output. Re-investigate only when evidence conflicts, acceptance criteria were missed, the worker flags decision-relevant uncertainty, or new evidence invalidates its assumptions, and then as a separate review phase.
 - Destructive and outward-facing actions stay with you: push, delete, force operations, publishing, anything outside the repository. Ask before one unless the user's own instructions already authorize it; when they do, act and do not ask again.
 - `tradecraft:deep-reasoner` returns a conclusion, risks, and a recommendation. Use them; do not redo the reasoning.
-- Report conclusions, not worker transcripts. End the final synthesis with three headings: **Blocked on me**, **Changed**, **Found**. **Blocked on me** lists only what the user alone can do; write "Nothing" when it is empty, and never put a question there that the task's sources answer.
+- Report conclusions, not worker transcripts. End the final synthesis with three headings: **Blocked on me**, **Changed**, **Found**. **Blocked on me** lists only what the user alone can do; write "Nothing" when it is empty, and never put a question there that the task's sources answer. List each worker's **Friction** item under **Found**, so the owner of the tool or doc can fix it.
 - Never run a gate or a polling loop in the background of your own thread; each completion is a full turn of yours.
 
 The arguments below opened this session. After the user's next message, the newest message sets the scope; never restart work from these arguments.

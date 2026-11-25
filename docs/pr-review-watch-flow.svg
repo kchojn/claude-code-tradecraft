@@ -105,7 +105,7 @@
         <rect x="248" y="660" width="208" height="48" rx="20" fill="#f7f6f1"/>
         <rect x="248" y="660" width="208" height="48" rx="20" fill="#16212b" stroke="#5b6773" stroke-width="1" fill-opacity="0.03"/>
         <text x="352" y="680" fill="#16212b" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">One line per PR</text>
-        <text x="352" y="694" fill="#5b6773" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">event, findings, highest</text>
+        <text x="352" y="694" fill="#5b6773" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">event, findings, highest, cost</text>
 
         <!-- Legend -->
         <line x1="40" y1="740" x2="920" y2="740" stroke="#16212b" stroke-width="0.8" stroke-opacity="0.12"/>

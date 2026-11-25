@@ -218,6 +218,8 @@ A LOW-only round posted COMMENT, so a PR with nothing but minor findings waited 
 - GitHub branch protection can dismiss an approval when a push or a merge-base change alters the diff; that is the guard against commits added after an approval, and it is a repository setting, not something this command controls. [GitHub docs, protected branches; OpenSSF SCM best practices]
 - Practitioners who let a bot approve gate it on what the change touches, not only on the bot's findings, and approve after CI passes; a rule that counted only resolved bot comments could not tell test fixtures from billing logic. [Rewind, AI approval; Augment, approval guardrails] Bot approval invites automation bias: a polished PR draws a quick approval where it most needs a close look. [Codacy, automation bias]
 
+Section 22 adds two more conditions to this gate.
+
 Adopted in section 14: CONFIRMED LOW only approves, with the LOW comments on the same review; the high-risk tier from section 3 still gets COMMENT. Every APPROVE passes a gate read at the race check: no failed check, no merge conflict, no `[Optional]` finding at MEDIUM or above. A failed gate posts COMMENT with a one-line reason.
 
 Not adopted: withholding approval while a check is pending, because a review rarely outlasts CI, the next review of the same head stops at once, and required checks still block the merge; withholding a zero-finding APPROVE on the high-risk tier, which this command has always given.
@@ -262,6 +264,33 @@ Not adopted:
 - `CLAUDE_CODE_DISABLE_BACKGROUND_TASKS=1`, which the docs say makes Claude wait for subagents: it also removes background shell commands, and no run here has tried a review under it.
 - A lower cap with the verifier on a cheaper model: no run here compares verifiers, so the routing in section 4 of the skill stays, and the cap moves instead.
 
+## 22. Running PR code and approving need a trust check
+
+Two steps of a review act outside the review: a test run executes the PR's code, and an APPROVE can let GitHub merge. Neither had a condition on who wrote the code or on what the merge waits for.
+
+- A local watch runs commands such as the tests on the user's machine, under the user's credentials, so Osmani says to run it only on a repository where you trust everyone who can land changes on the base branch. With auto-merge on, a change the watch makes can be what lets GitHub merge, and text in a pull request can sway a review. [A practical guide to shipping with Claude Code, Osmani, 2026-11-24]
+- `gh pr view --json` offers `isCrossRepository` and `autoMergeRequest`, and has no `authorAssociation` field. `autoMergeRequest` is `null` when auto-merge is off. [measured, gh 2.105.0, 2026-11-25]
+- A branch in the repository can only be pushed by someone the repository gave write access, and the review trusts the repository's writers. A fork PR is code from anyone, and a test run executes it on this machine under the user's credentials, unattended when the watcher started the review. `isCrossRepository` tells the two apart without a field the CLI does not have. [opinion: derived from the two lines above]
+- `git worktree add` runs the clone's `post-checkout` hook inside the new tree. On a scratch repository, plain `git worktree add --detach` ran the hook once and `git -c core.hooksPath=/dev/null worktree add --detach` ran it zero times. A hook manager that reads its config from the checked-out tree would run the PR's code. [measured, git 2.56.1, 2026-11-25]
+- `$TMPDIR` expands to a different directory inside and outside the Bash sandbox. In the dry run of this skill on its own PR, the worktree did not land where the workers were told to look. [measured, dry run of this skill on its own PR, 2026-11-25]
+
+Implication: the review runs a test from the PR only when `isCrossRepository` is `false`; for a fork PR the verdict rests on reading, a candidate only a test run could settle stays PLAUSIBLE, and `Residual risk` says `tests not run: fork PR`. An APPROVE also needs `autoMergeRequest` to be `null`: with auto-merge on, the approval can be the last condition, so it posts as COMMENT with `Approval withheld: auto-merge is on.` The lead resolves the gate once and puts `Test runs: allowed` or `Test runs: not allowed (fork PR)` in the context pack, the verifier brief and every section 8 brief, so a worker that was not told never runs a test. On a fork PR a HIGH or BLOCKER candidate that stayed PLAUSIBLE only because the test run was withheld also blocks an APPROVE, with `Approval withheld: tests not run on a fork PR.`: without that, the candidate drops under the confidence gate, a PR with no CI checks counts as no failed check, and the review approves. The review body then carries `Tests not run: fork PR.`. Both worktrees are added with `-c core.hooksPath=/dev/null`, and the lead hands workers the absolute path it read back. Section 2, section 6, section 8, section 11 and section 14 of the skill carry these rules.
+
+Not adopted: a check on the author's association with the repository. `gh pr view --json` has no such field, but `gh api repos/<owner>/<repo>/pulls/<number> --jq .author_association` returns it (`OWNER` on this repository) [measured, 2026-11-25]. It adds nothing to this gate, because a same-repository branch already implies write access. Also not adopted: running fork tests in a sandbox, which no run here has tried.
+
+## 23. Named failures and the cost of a review
+
+Two gaps showed up when the skills were read against Uber's agent-skill work: a skill said what to do on the happy path and left a failure to the model's judgment, and a rule change had no number beside it.
+
+- A skill should carry an error recovery section: a table of named failures and their fixes, where "try again" does not count. [How Uber Evals 1 Million Agent Skill Invocations a Month, Uber Engineering, 2026-11-24; the post names https://www.uber.com/us/en/blog/optimizing-ubers-agent-skills/ as its home, which was not read]
+- Uber measures each skill's cost per invocation and compares it before and after a change. [same post; upstream, not re-measured]
+- Agents file a structured report when a tool, flag or doc misbehaves: what the agent tried, what it expected, what happened, what would fix it. One of their fixes was a pull request skill that waited for CI checks on a repository that has none until it timed out. [same post; upstream, not re-measured]
+- A watcher result file (`claude -p --output-format json`) carries `total_cost_usd`, `num_turns` and `duration_ms` at its top level. [measured, 2026-11-25]
+
+Implication: `skills/pr-review/SKILL.md` section 17 and a `Failures` section in `skills/pr-review-watch/SKILL.md` name each failure, how it shows and what to do, and never answer with "retry" alone; a PR with no checks counts as no failed check and the review never waits for one. The watcher's report appends cost, lead turns and minutes to every PR's line, read from the result file with one `jq` command, so a rule change shows its effect on a review's cost. `num_turns` counts only the lead's own turns: 3 turns on a 5.08 USD run, so the number is labeled `lead turns`. [measured, 2026-11-25] When Codex cannot run (no credits), a fresh `tradecraft:reviewer` briefed with the code and not the lead's conclusion gives the second opinion, because the point of the escalation is a reader that has not seen the verdict; a different provider is lost, and `Residual risk` says so. [opinion] A worker report gets a `Friction` field (`docs/orchestration-best-practices.md` section 5), so a tool or doc that misbehaved reaches its owner.
+
+Not adopted: Uber's per-invocation cost comparison as an automated check; the watcher prints the numbers and a person compares them.
+
 ## Sources
 
 - Claude Code built-in `/code-review` recipe, extracted from the `claude` 2.1.299 binary (strings `Angle A`, `PLAUSIBLE by default`, `Sweep for gaps`)
@@ -305,3 +334,5 @@ Not adopted:
 - [Claude Code docs, code review](https://code.claude.com/docs/en/code-review)
 - [GitHub docs, about protected branches](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/about-protected-branches), [OpenSSF SCM best practices, dismiss stale reviews](https://best.openssf.org/SCM-BestPractices/github/repository/dismisses_stale_reviews.html)
 - [Letting AI approve pull requests safely, Rewind](https://rewind.com/blog/ai-approve-pull-requests-safely/), [AI agents PR approval guardrails, Augment](https://www.augmentcode.com/guides/ai-agents-pull-request-approval-guardrails), [Automation bias in AI code review, Codacy](https://blog.codacy.com/automation-bias-in-ai-generated-code-review-why-clean-code-still-ships-broken)
+- [A practical guide to shipping with Claude Code, Addy Osmani - Claude Code blog](https://claude.dev/blog/the-work-after-you-open-a-pr/), published 2026-11-24
+- [How Uber Evals 1 Million Agent Skill Invocations a Month - Uber Engineering](https://x.com/UberEng/status/2125008806249930999), published 2026-11-24

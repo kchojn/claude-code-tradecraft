@@ -61,6 +61,7 @@ Return a fixed shape so the lead can choose the next phase without redoing the w
 - Status token: `DONE`, `DONE_WITH_CONCERNS`, `NEEDS_CONTEXT`, `BLOCKED`.
 - Result, files changed, verification run, risks, deferred items.
 - No transcripts and no full command output. For large artifacts, write to a file and return the path. [Orchestrating sub-agents; Konishi guide]
+- A friction field: a tool, flag, command or doc line that did not behave as documented, with what was tried, what was expected and what happened. Uber's agents file such a report when a tool, flag or doc misbehaves (what the agent tried, what it expected, what happened, what would fix it), and one fix it led to was a pull request skill that waited for CI checks on a repository that has none until it timed out. The lead lists each one in the final synthesis so the owner can fix it. The wording of the field is ours. [How Uber Evals 1 Million Agent Skill Invocations a Month; upstream, not re-measured]
 
 ## 6. Parallelize by dependency
 
@@ -157,3 +158,4 @@ Numbers come from 35 recorded `/tradecraft:lead` sessions on one machine. Where 
 - [Orchestrating sub-agents for cost-efficient engineering - DEV](https://dev.to/kasundsilva/orchestrating-sub-agents-for-cost-efficient-engineering-1pl3)
 - [I built 100 Claude Code subagents - DEV](https://dev.to/suraj_khaitan_f893c243958/i-built-100-claude-code-subagents-these-are-the-12-that-actually-earn-their-context-10nn)
 - [Stop hitting Claude Code limits: 7 best practices, tested on 945 runs - Kensei](https://x.com/0xKense1/status/2111105138290987198) ([harness and data](https://github.com/kenseii1/claude-code-limits-tests))
+- [How Uber Evals 1 Million Agent Skill Invocations a Month - Uber Engineering](https://x.com/UberEng/status/2125008806249930999), published 2026-11-24; the post names https://www.uber.com/us/en/blog/optimizing-ubers-agent-skills/ as its home, which was not read
