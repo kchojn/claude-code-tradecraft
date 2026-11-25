@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `/tradecraft:pr-review` and `/tradecraft:pr-review-watch` carry a failures table: a named failure, how it shows and what to do, for a `gh` login or rate limit error, a PR with no CI checks, and a Codex run with no credits.
+
+### Changed
+
+- `/tradecraft:pr-review` runs a test from the PR only when the PR is not from a fork; a fork PR gets no test run in either mode and `Residual risk` says `tests not run: fork PR`.
+- `/tradecraft:pr-review` withholds an approval while auto-merge is on, with `Approval withheld: auto-merge is on.`
+- `/tradecraft:pr-review-watch` appends cost, turns and minutes to each PR's line in the batch report.
+- `/tradecraft:lead` worker reports gain a `Friction` field, and the final synthesis lists each one under Found.
+
 ## [0.10.2] - 2026-11-24
 
 ### Fixed

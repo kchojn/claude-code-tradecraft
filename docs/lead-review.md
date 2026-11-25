@@ -19,22 +19,22 @@ Checked against [orchestration-best-practices.md](orchestration-best-practices.m
 | Workers batch reads and return big output as a file | 11, 5 | Worker brief, rules for every brief: line 75 "independent reads in one turn" |
 | A worker waits for what it starts and reports once | 12 | Worker brief, rules for every brief: line 75 "Tell it to wait for what it starts" |
 | Parallel workers share a cached prefix | 11 | Worker brief, rules for every brief: line 76 "byte for byte" |
-| Fixed report shape | 5 | Worker report: lines 80-89 |
-| Parallel only when independent; disjoint files or a worktree for writers | 6 | Delegation rules: lines 93-94 |
-| Turn limit is not a provider failure | 11 | Delegation rules: line 96 "A worker that hits its turn limit" |
+| Fixed report shape, with a friction field the lead lists under Found | 5 | Worker report: lines 80-90 "**Friction**"; Delegation rules: line 101 "lists each **Friction** item under **Found**" |
+| Parallel only when independent; disjoint files or a worktree for writers | 6 | Delegation rules: lines 94-95 |
+| Turn limit is not a provider failure | 11 | Delegation rules: line 97 "A worker that hits its turn limit" |
 | One `tradecraft:qa-runner` run covers one flow; the 80-turn cap is hit by a brief with several | 12 | Verification follows the phase: line 58 "One `tradecraft:qa-runner` run covers one flow" |
-| A worker is resumed at most three times | 12 | Delegation rules: line 95 "Resume a worker at most three times" |
+| A worker is resumed at most three times | 12 | Delegation rules: line 96 "Resume a worker at most three times" |
 | No worker above `high` effort | 3 | Workers table: lines 12-19, every effort is `medium` or `high`; the skill passes no `effort` |
-| Retry on the same or a stronger model, never a cheaper one; `model: opus` for a failed `tradecraft:implementer` phase, `tradecraft:deep-reasoner` for a failed `tradecraft:reviewer` or `tradecraft:scout` phase | 3, 7 | Workers: line 25 "`model: opus`"; Delegation rules: line 96 "Retry on the same worker or a stronger one" |
-| Escalate after two failures, once, read-only, on the most capable model; a different provider for disputes | 7 | Workers table: lines 19-20; Delegation rules: line 96 "goes once to `tradecraft:oracle`" |
-| A major design, and a question the Opus worker could not settle, go to the most capable model without two failures | 7 | Workers table: line 19; Phases: line 54 "A major design goes to `tradecraft:oracle`"; Delegation rules: line 96 "report that reaches no conclusion" |
+| Retry on the same or a stronger model, never a cheaper one; `model: opus` for a failed `tradecraft:implementer` phase, `tradecraft:deep-reasoner` for a failed `tradecraft:reviewer` or `tradecraft:scout` phase | 3, 7 | Workers: line 25 "`model: opus`"; Delegation rules: line 97 "Retry on the same worker or a stronger one" |
+| Escalate after two failures, once, read-only, on the most capable model; a different provider for disputes | 7 | Workers table: lines 19-20; Delegation rules: line 97 "goes once to `tradecraft:oracle`" |
+| A major design, and a question the Opus worker could not settle, go to the most capable model without two failures | 7 | Workers table: line 19; Phases: line 54 "A major design goes to `tradecraft:oracle`"; Delegation rules: line 97 "report that reaches no conclusion" |
 | The stronger model is a worker the lead calls, not an advisor | 7 | Workers table: line 19 "one call per question" |
-| The second provider is called directly and read-only, not through a forwarding subagent | 7 | Delegation rules: line 96 "Never pass `--write`, and never go through `/codex:rescue`" |
-| Destructive actions stay in the lead; ask only when the user's instructions do not authorize them | 7, 12 | Delegation rules: line 98 "Ask before one unless the user's own instructions already authorize it" |
+| The second provider is called directly and read-only, not through a forwarding subagent | 7 | Delegation rules: line 97 "Never pass `--write`, and never go through `/codex:rescue`" |
+| Destructive actions stay in the lead; ask only when the user's instructions do not authorize them | 7, 12 | Delegation rules: line 99 "Ask before one unless the user's own instructions already authorize it" |
 | Verify the premise | 8 | Verify the premise: lines 39-46 |
-| Lead keeps synthesis; "Blocked on me" lists only what the user alone can do | 7, 12 | Workers table: line 21 "you"; Delegation rules: line 100 "Report conclusions, not worker transcripts" and "**Blocked on me** lists only what the user alone can do" |
-| No gate or polling loop in the lead's own background | 12 | Delegation rules: line 101 "Never run a gate or a polling loop in the background" |
-| The newest user message sets the scope after compaction | 12 | Last paragraph: line 103 "The arguments below opened this session" |
+| Lead keeps synthesis; "Blocked on me" lists only what the user alone can do | 7, 12 | Workers table: line 21 "you"; Delegation rules: line 101 "Report conclusions, not worker transcripts" and "**Blocked on me** lists only what the user alone can do" |
+| No gate or polling loop in the lead's own background | 12 | Delegation rules: line 102 "Never run a gate or a polling loop in the background" |
+| The newest user message sets the scope after compaction | 12 | Last paragraph: line 104 "The arguments below opened this session" |
 | User-only command | 9 | Frontmatter: line 3 `disable-model-invocation: true` |
 
 ## Gaps

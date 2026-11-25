@@ -77,7 +77,20 @@ One PR failing does not stop the rest. Then print `reviewing <n> PRs: <owner/rep
 When the background command's completion notice arrives, read only the `Mode:`, `Review:`, `Findings:`, and `Highest:` lines from each result file's `.result` (`jq -r .result <file> | grep -E '^(Mode|Review|Findings|Highest):'`), plus its first line when none of them is there (`jq -r .result <file> | head -1`), and print one line per PR that posted:
 
 ```
-<owner/repo>#<number>: <Review event>, <findings> findings, highest <severity or none>
+<owner/repo>#<number>: <Review event>, <findings> findings, highest <severity or none>, <cost> USD, <turns> turns, <minutes> min
 ```
 
 When the file is not valid JSON or `is_error` is true, print `failed <owner/repo>#<number>` and the paths of the `.json` and `.err` files. A run that posted nothing still exits as a success, so check for the post: when `.result` has no `Review:` line, or the line reads `Review: none`, print `not posted <owner/repo>#<number>: ` and the `Mode:` line, or the first line of `.result` when there is no `Mode:` line, then the path of the `.json` file. That covers a review that stopped early, for example on a draft, one that ran out of budget or time before its verifier, and one a project rule withheld. Never start a second attempt yourself: it would spend up to the cap again on each head.
+
+For every result file that is valid JSON, also read its cost with one command, `jq -r 'select(.total_cost_usd and .num_turns and .duration_ms) | "\((.total_cost_usd*100|round)/100) USD, \(.num_turns) turns, \((.duration_ms/60000)|round) min"' <file>`, and append `, <cost> USD, <turns> turns, <minutes> min` to that PR's line, whether it posted, did not post or failed. The numbers show what a rule change did to a review's cost. A file that is not valid JSON, or one without those fields, prints nothing: append nothing.
+
+## Failures
+
+| failure | how it shows | what to do |
+|---------|--------------|------------|
+| `gh` not signed in, in step 2 or 3 | a `gh` call fails with an authentication error | Release the lock, print one line telling the user to run `gh auth login`, and end the pass. The next pass tries again on its timer. |
+| Rate limit, in step 2 or 3 | a `gh` call fails with a rate limit error | Release the lock, print one line with the reset time from `gh api rate_limit`, and end the pass. The next pass tries again on its timer. |
+| Stale lock | `lock/pid` names a dead process, or a pid-less lock is older than ten minutes | Step 1. |
+| No local clone | no clone root holds a matching remote | Step 4. |
+| Invalid result or `is_error` | the result file is not valid JSON, or `is_error` is true | Step 6. |
+| A review that posted nothing | `.result` has no `Review:` line, or `Review: none` | Step 6. |
