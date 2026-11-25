@@ -19,7 +19,7 @@ Checked against [orchestration-best-practices.md](orchestration-best-practices.m
 | Workers batch reads and return big output as a file | 11, 5 | Worker brief, rules for every brief: line 75 "independent reads in one turn" |
 | A worker waits for what it starts and reports once | 12 | Worker brief, rules for every brief: line 75 "Tell it to wait for what it starts" |
 | Parallel workers share a cached prefix | 11 | Worker brief, rules for every brief: line 76 "byte for byte" |
-| Fixed report shape, with a friction field the lead lists under Found | 5 | Worker report: lines 80-90 "**Friction**"; Delegation rules: line 101 "lists each **Friction** item under **Found**" |
+| Fixed report shape, with a friction field the lead lists under Found | 5 | Worker report: lines 80-90 "**Friction**"; Delegation rules: line 101 "List each worker's **Friction** item under **Found**" |
 | Parallel only when independent; disjoint files or a worktree for writers | 6 | Delegation rules: lines 94-95 |
 | Turn limit is not a provider failure | 11 | Delegation rules: line 97 "A worker that hits its turn limit" |
 | One `tradecraft:qa-runner` run covers one flow; the 80-turn cap is hit by a brief with several | 12 | Verification follows the phase: line 58 "One `tradecraft:qa-runner` run covers one flow" |
