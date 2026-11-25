@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.0] - 2026-11-25
+
 ### Added
 
 - `/tradecraft:pr-review` carries a failures table: a named failure, how it shows and what to do, for the `gh` login error, the rate limit, a PR with no CI checks and Codex without credits. `/tradecraft:pr-review-watch` carries one for the `gh` login error and the rate limit. The rate limit row names the resource that ran out.
@@ -185,7 +187,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `/pr-review` scores confidence on whether the defect exists, and posts CONFIRMED findings at every severity.
 - High-confidence PLAUSIBLE items appear in the review body, and a gap between what is shown and what is executed rates MEDIUM.
 
-[Unreleased]: https://github.com/kchojn/claude-code-tradecraft/compare/v0.10.2...HEAD
+[Unreleased]: https://github.com/kchojn/claude-code-tradecraft/compare/v0.11.0...HEAD
+[0.11.0]: https://github.com/kchojn/claude-code-tradecraft/compare/v0.10.2...v0.11.0
 [0.10.2]: https://github.com/kchojn/claude-code-tradecraft/compare/v0.10.1...v0.10.2
 [0.10.1]: https://github.com/kchojn/claude-code-tradecraft/compare/v0.10.0...v0.10.1
 [0.10.0]: https://github.com/kchojn/claude-code-tradecraft/compare/v0.9.0...v0.10.0
