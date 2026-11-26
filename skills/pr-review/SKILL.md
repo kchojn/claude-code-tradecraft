@@ -205,13 +205,13 @@ Every inline comment targets the **current head SHA**, with line numbers from th
 
 ## 11. Race check
 
-Immediately before publishing: refresh PR state and head SHA, confirm the PR is open, compare with the reviewed head, and read `gh pr checks` and `gh pr view --json mergeable,autoMergeRequest` for the approval gate in section 14. If the head moved, do not publish stale comments. Re-check only the findings whose own file changed or whose evidence cites a file that changed, and refresh their line anchors and permalinks; restart the whole review only when the new diff is materially different.
+Immediately before publishing: refresh PR state and head SHA, confirm the PR is open, compare with the reviewed head, and read `gh pr checks` and `gh pr view --json mergeable,autoMergeRequest` for the approval gate in section 14, and `gh api repos/{owner}/{repo}/pulls/{number}/reviews --paginate` for this account's standing change request, also section 14. If the head moved, do not publish stale comments. Re-check only the findings whose own file changed or whose evidence cites a file that changed, and refresh their line anchors and permalinks; restart the whole review only when the new diff is materially different.
 
 ## 12. Modes
 
 **Dry-run** (default): full find and verify, no GitHub mutation, findings printed locally.
 
-**Publish** (`--publish`): dedupe, race check, resolve fixed threads, then one `gh api` call to `POST /repos/{owner}/{repo}/pulls/{number}/reviews` carrying `commit_id`, `event`, `body`, and every inline comment, so the review and its comments land together or not at all. `event` is derived as section 14 says, from the CONFIRMED findings posted in this run plus the earlier findings section 14 still counts. Check the payload before sending: a body that says `after the HIGH is fixed` or `not mergeable` with any event but `REQUEST_CHANGES` is a bug, do not send it; a half-posted review would make the next run skip the missing findings. Pass the payload as a JSON file or `--input -`, never through shell quoting, so backticks and newlines arrive intact.
+**Publish** (`--publish`): dedupe, race check, resolve fixed threads, lift a standing change request as section 14 says, then one `gh api` call to `POST /repos/{owner}/{repo}/pulls/{number}/reviews` carrying `commit_id`, `event`, `body`, and every inline comment, so the review and its comments land together or not at all. `event` is derived as section 14 says, from the CONFIRMED findings posted in this run plus the earlier findings section 14 still counts. Check the payload before sending: a body that says `after the HIGH is fixed` or `not mergeable` with any event but `REQUEST_CHANGES` is a bug, and so is a body that says `Mergeable` without the still-stands line from section 14 while this account's change request is in force; do not send it; a half-posted review would make the next run skip the missing findings. Pass the payload as a JSON file or `--input -`, never through shell quoting, so backticks and newlines arrive intact.
 
 ## 13. Comment format
 
@@ -274,7 +274,23 @@ The event follows the CONFIRMED findings; `[Optional]` comments change it only t
 - `gh pr view --json autoMergeRequest` is `null`: with auto-merge on, this approval can be the last condition and GitHub merges with no person acting. The reason is `auto-merge is on`.
 - On a fork PR, no HIGH or BLOCKER candidate, accepted or dropped, stayed PLAUSIBLE only because the test run was withheld: the test that would have settled it never ran, so the result is not clean. The reason is `tests not run on a fork PR`.
 
-A merged or closed PR gets no review. The review body is empty unless there is a CONFIRMED finding, a `Pre-existing` item, a withheld approval, the cycle limit from section 2 applies, or section 2 withheld the test run. Then it is the withheld-approval line when it applies, the cycle-limit sentence when it applies, the line `Tests not run: fork PR.` when section 2 withheld the test run, one plain sentence when there is a CONFIRMED finding, and one `Pre-existing` line per item, nothing more:
+A LOW-only COMMENT on the high-risk tier opens with the same line and the reason `high-risk tier`: a COMMENT with no stated reason reads as a run that failed to approve. Name every reason that holds, joined with `; `, and name an `[Optional]` at MEDIUM or above with its severity, as in `Approval withheld: high-risk tier; [Optional] finding at HIGH.`
+
+**Standing change request**: GitHub keeps this account's `CHANGES_REQUESTED` review in force until this account approves or the review is dismissed; a later COMMENT and a push both leave it blocking the merge. This account's change request stands when its newest review in a state other than `COMMENTED` or `PENDING` has state `CHANGES_REQUESTED`. When it stands and the event of this run is COMMENT, dismiss that review before posting if all of these hold, because then nothing that earned the block is left:
+
+- No earlier finding at MEDIUM or above is still `OPEN`.
+- No `[Optional]` comment of this run is HIGH or BLOCKER: a defect of that size that no one settled is a reason to keep the block. The reason is `[Optional] finding at <severity>`.
+- `autoMergeRequest` is `null`: with auto-merge on, lifting the block can be the last condition, as for an approval. The reason is `auto-merge is on`.
+
+The call:
+
+```sh
+gh api -X PUT repos/{owner}/{repo}/pulls/{number}/reviews/{review_id}/dismissals -f event=DISMISS -f message='Findings fixed as of <short head sha>; see the review of that head.'
+```
+
+An APPROVE lifts the change request by itself and a REQUEST_CHANGES replaces it, so neither needs the call. When a condition fails or the call fails, post the review anyway and open the body with `Change request from <short sha of that review> still stands: <reason>.`, so the body never says `Mergeable` over this account's own block. The reason for a failed call is `dismissal failed`, and for an open earlier finding `<n> earlier findings open`.
+
+A merged or closed PR gets no review. The review body is empty unless there is a CONFIRMED finding, a `Pre-existing` item, a withheld approval, a change request that still stands, the cycle limit from section 2 applies, or section 2 withheld the test run. Then it is the still-stands line when it applies, the withheld-approval line when it applies, the cycle-limit sentence when it applies, the line `Tests not run: fork PR.` when section 2 withheld the test run, one plain sentence when there is a CONFIRMED finding, and one `Pre-existing` line per item, nothing more:
 
 ```
 2 findings, highest HIGH. Mergeable after the HIGH is fixed.
@@ -293,6 +309,7 @@ Trust completed worker output. Never redo a completed phase. Re-investigate only
 ```
 Mode: DRY_RUN | PUBLISHED
 Review: APPROVE | COMMENT | REQUEST_CHANGES        (publish only)
+Change request: none | lifted | still stands       (publish only)
 Findings: <N>
 Highest: <severity or none>
 Verdict: <as in section 14>
@@ -316,6 +333,7 @@ Then each accepted finding in the comment format above, most severe first, CONFI
 | Codex reports no credits | the companion script says so | A fresh `tradecraft:reviewer`, briefed with the code and not the lead's conclusion, gives the second opinion. `Residual risk` says Codex did not run. |
 | Fetch fails on a ref lock | `git fetch` names a locked ref | Section 2. |
 | `<reviewed>` cannot be fetched | `git fetch <remote> <reviewed>` fails | Section 2. |
+| The dismissal of this account's change request fails | the `PUT .../dismissals` call returns 403, 404 or 422 | Section 14: post the review with the still-stands line and the reason `dismissal failed`. `Residual risk` names the review id and the status. Never approve to clear it. |
 | The head moved before publish | the head SHA at the race check differs from the reviewed one | Section 11. |
 | A finder or verifier did not finish | a worker reports `BLOCKED` or never reports | Section 8. |
 

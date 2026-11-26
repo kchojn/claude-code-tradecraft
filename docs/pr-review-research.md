@@ -198,6 +198,7 @@ These values in the skills have no cited source and no recorded run. Dates come 
 - `Up to 6 candidates per angle, up to 8 on high-risk`, and the gap sweep's `up to 8` (`skills/pr-review/SKILL.md` section 5). Set 2026-10-14. No measured source; change it when a run shows a better value.
 - Watcher `-P 3` (three reviews at once). Set 2026-11-03. The skill gives a reason, enough to drain a morning's requests without hitting rate limits, but no measurement. No measured source; change it when a run shows a better value.
 - Watcher `90m` timeout per review (`skills/pr-review-watch/SKILL.md`). Raised from `60m` with section 21; the longest recorded review took 29 minutes, so the value is a margin, not a measurement. No measured source; change it when a run shows a better value. The budget cap left this list: section 21 measures it.
+- The reviewing account can dismiss its own review through the REST API (`skills/pr-review/SKILL.md` section 14). The docs name "anyone with write permissions" and do not mention the reviewer. No run here has made the call; the failures table covers a refusal. Record the first run that does.
 - Second finder on the high-risk tier (`skills/pr-review/SKILL.md` section 4). Set after Bugbot's reordering trick (section 1); the verification post says adding a second reviewer is "often a worse approach than tuning the primary". No run here compares one finder with two. No measured source; change it when a run shows a better value. [How the Claude Code team thinks about verification]
 
 ## 18. Rule files come from the base
@@ -291,6 +292,21 @@ Implication: `skills/pr-review/SKILL.md` section 17 and a `Failures` section in 
 
 Not adopted: Uber's per-invocation cost comparison as an automated check; the watcher prints the numbers and a person compares them.
 
+## 24. A change request that outlives its findings
+
+On a real PR this command requested changes at one head for two HIGH findings, then re-reviewed two pushes later, found all six earlier findings fixed and two new LOW ones, and posted COMMENT with the body `2 findings, highest LOW. Mergeable.` The PR stayed blocked.
+
+- The PR's `reviewDecision` stayed `CHANGES_REQUESTED` and its merge state `BLOCKED` after the COMMENT, with two approvals at the head on a branch that needs two. [measured, 2026-11-26]
+- The branch rule had `dismiss_stale_reviews_on_push` on. Four pushes dismissed another reviewer's approval as stale and left the change request in force. [measured, 2026-11-26]
+- "If a person with admin permissions chooses the Request changes option in a review, then that person must approve the pull request before the pull request can be merged", and when that reviewer is not available "anyone with write permissions for the repository can dismiss the blocking review". [GitHub docs, about protected branches] [official doc]
+- A review is dismissed with `PUT /repos/{owner}/{repo}/pulls/{pull_number}/reviews/{review_id}/dismissals`; `message` is required and `event` can only be `DISMISS`. [GitHub REST docs, pull request reviews] [official doc]
+- The COMMENT came from the high-risk rule in section 19, which writes no reason in the body, and the run also held an `[Optional]` rated HIGH that the summary line `highest LOW` did not show. The owner could not tell from GitHub why the approval was missing. [measured, 2026-11-26]
+- The wording follows the prompting guide: give the reason beside the instruction ("Claude can generalize from the explanation") and say what to do, not what to avoid. [Claude prompting best practices] [official doc]
+
+Implication: `skills/pr-review/SKILL.md` section 14 dismisses this account's standing change request before it posts a COMMENT, when no earlier finding at MEDIUM or above is still open, no `[Optional]` of the run is HIGH or BLOCKER, and auto-merge is off; otherwise, and when GitHub refuses the call, a still-stands line with the reason opens the body. On the PR above the rule keeps the block, for the `[Optional]` rated HIGH, and says so. A LOW-only COMMENT on the high-risk tier opens with `Approval withheld: high-risk tier.`, and the line names every reason that holds, with the severity of an `[Optional]` that blocks the approval.
+
+Not adopted: approving a LOW-only round on the high-risk tier to clear the change request, because section 19 withholds that approval on purpose; dismissing with an `[Optional]` at HIGH or BLOCKER open, because the block would lift on a defect of that size that no one settled; dismissing with auto-merge on, for the reason section 22 gives for an approval; leaving the change request for a person to dismiss, because an unattended run then blocks a PR whose findings are all fixed.
+
 ## Sources
 
 - Claude Code built-in `/code-review` recipe, extracted from the `claude` 2.1.299 binary (strings `Angle A`, `PLAUSIBLE by default`, `Sweep for gaps`)
@@ -336,3 +352,5 @@ Not adopted: Uber's per-invocation cost comparison as an automated check; the wa
 - [Letting AI approve pull requests safely, Rewind](https://rewind.com/blog/ai-approve-pull-requests-safely/), [AI agents PR approval guardrails, Augment](https://www.augmentcode.com/guides/ai-agents-pull-request-approval-guardrails), [Automation bias in AI code review, Codacy](https://blog.codacy.com/automation-bias-in-ai-generated-code-review-why-clean-code-still-ships-broken)
 - [A practical guide to shipping with Claude Code, Addy Osmani - Claude Code blog](https://claude.dev/blog/the-work-after-you-open-a-pr/), published 2026-11-24
 - [How Uber Evals 1 Million Agent Skill Invocations a Month - Uber Engineering](https://x.com/UberEng/status/2125008806249930999), published 2026-11-24
+- [GitHub REST docs, pull request reviews](https://docs.github.com/en/rest/pulls/reviews)
+- [Claude prompting best practices](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices), read 2026-11-26
