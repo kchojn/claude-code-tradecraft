@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- `/tradecraft:pr-review --publish` dismisses its own earlier REQUEST_CHANGES when a re-review ends in COMMENT, no earlier finding at MEDIUM or above is still open, no `[Optional]` finding is HIGH or BLOCKER and auto-merge is off; before, the PR stayed blocked under a body that said `Mergeable`. When the change request is kept or GitHub refuses the dismissal, the body opens with `Change request from <sha> still stands: <reason>.`, and the final output gains a `Change request:` line.
+- `/tradecraft:pr-review` opens a LOW-only COMMENT on the high-risk tier with `Approval withheld: high-risk tier.`, and the withheld-approval line names every reason that holds, with the severity of an `[Optional]` finding that blocks the approval.
+
 ## [0.11.0] - 2026-11-25
 
 ### Added

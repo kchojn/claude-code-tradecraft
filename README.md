@@ -155,7 +155,7 @@ A re-review covers only the commits the author added since the last reviewed hea
 | MEDIUM | COMMENT |
 | MEDIUM whose impact blocks merge | REQUEST_CHANGES |
 | Nothing confirmed, or only LOW | APPROVE |
-| LOW only, on the high-risk tier | COMMENT |
+| LOW only, on the high-risk tier | COMMENT, opening with `Approval withheld: high-risk tier.` |
 
 An APPROVE turns into COMMENT, with a one-line reason, when any of these holds:
 
@@ -164,6 +164,8 @@ An APPROVE turns into COMMENT, with a one-line reason, when any of these holds:
 - An `[Optional]` finding is MEDIUM or above.
 - Auto-merge is on, because the approval could be the last condition and GitHub would merge with no person acting.
 - The PR is from a fork and a HIGH or BLOCKER candidate stayed PLAUSIBLE only because the test run was withheld (`tests not run on a fork PR`).
+
+GitHub keeps an earlier REQUEST_CHANGES from the same account in force after a COMMENT or a push. When a re-review ends in COMMENT, the command dismisses its own change request before it posts, unless an earlier finding at MEDIUM or above is still open, an `[Optional]` finding is HIGH or BLOCKER, or auto-merge is on. When it keeps the change request, or GitHub refuses the dismissal, the review body opens with `Change request from <sha> still stands: <reason>.`
 
 ## How /tradecraft:pr-review-watch runs
 
