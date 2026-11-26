@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.1] - 2026-11-26
+
 ### Fixed
 
 - `/tradecraft:pr-review --publish` dismisses its own earlier REQUEST_CHANGES when a re-review ends in COMMENT, no earlier finding at MEDIUM or above is still open, no `[Optional]` finding is HIGH or BLOCKER and auto-merge is off; before, the PR stayed blocked under a body that said `Mergeable`. When the change request is kept or GitHub refuses the dismissal, the body opens with `Change request from <sha> still stands: <reason>.`, and the final output gains a `Change request:` line.
@@ -192,7 +194,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `/pr-review` scores confidence on whether the defect exists, and posts CONFIRMED findings at every severity.
 - High-confidence PLAUSIBLE items appear in the review body, and a gap between what is shown and what is executed rates MEDIUM.
 
-[Unreleased]: https://github.com/kchojn/claude-code-tradecraft/compare/v0.11.0...HEAD
+[Unreleased]: https://github.com/kchojn/claude-code-tradecraft/compare/v0.11.1...HEAD
+[0.11.1]: https://github.com/kchojn/claude-code-tradecraft/compare/v0.11.0...v0.11.1
 [0.11.0]: https://github.com/kchojn/claude-code-tradecraft/compare/v0.10.2...v0.11.0
 [0.10.2]: https://github.com/kchojn/claude-code-tradecraft/compare/v0.10.1...v0.10.2
 [0.10.1]: https://github.com/kchojn/claude-code-tradecraft/compare/v0.10.0...v0.10.1
